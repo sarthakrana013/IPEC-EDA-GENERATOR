@@ -109,6 +109,19 @@ st.markdown("""
         box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
     }
     div[data-testid="stMetricLabel"] * { color: #64748b !important; font-family: 'JetBrains Mono', monospace !important; font-size: 0.75rem !important; text-transform: uppercase !important; font-weight: bold !important;}
+/* Fix File Uploader Visibility */
+    [data-testid="stFileUploadDropzone"] {
+        background-color: #1e293b !important;
+        border: 1px solid #334155 !important;
+    }
+    [data-testid="stFileUploadDropzone"] * {
+        color: #ffffff !important;
+    }
+    [data-testid="stFileUploadDropzone"] button {
+        background-color: #107c41 !important;
+        color: #ffffff !important;
+        border: none !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
