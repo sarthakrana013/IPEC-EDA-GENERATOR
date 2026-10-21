@@ -5,91 +5,110 @@ import time
 # 1. Page Configuration
 st.set_page_config(page_title="EDA Engine Cloud", page_icon="📊", layout="wide", initial_sidebar_state="expanded")
 
-# 2. INJECTING YOUR CUSTOM UI/UX CSS DESIGN
+# 2. INJECTING THE "EXCEL GREEN & WHITE" UI/UX
 st.markdown("""
 <style>
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     
-    /* Import JetBrains Mono from your design */
-    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+    /* Import Fonts */
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap');
 
-    /* Global Typography & Background matching your Tailwind config */
-    html, body, [class*="css"] { 
-        font-family: "Times New Roman", Times, Georgia, serif;
-        background-color: #f8fafc; 
-        color: #0f172a;
+    /* Force Light Mode Backgrounds */
+    .stApp { background-color: #f8fafc !important; }
+    [data-testid="stSidebar"] { background-color: #ffffff !important; border-right: 1px solid #e2e8f0 !important; }
+    
+    /* Global Typography overrides to ensure dark text on light backgrounds */
+    html, body, p, span, div, h1, h2, h3, h4, h5, h6, label { 
+        font-family: "Times New Roman", Times, Georgia, serif !important;
+        color: #0f172a !important;
     }
     
-    /* Force Data & Metrics to use JetBrains Mono */
+    /* Force Monospace for Data & Metrics */
     code, .stDataFrame, div[data-testid="stMetricValue"] {
         font-family: 'JetBrains Mono', monospace !important;
     }
 
-    /* Hero Section Styling */
-    .hero-title { 
-        font-size: 2.8rem; 
-        color: #0f172a; 
-        font-weight: 700; 
-        text-align: center; 
-        margin-top: 40px; 
-        margin-bottom: 10px; 
+    /* Top Navigation / Status Bar */
+    .top-status-bar {
+        background-color: #107c41;
+        color: #ffffff !important;
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-family: 'JetBrains Mono', monospace !important;
+        font-size: 12px;
+        font-weight: 600;
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 25px;
+        box-shadow: 0 2px 4px rgba(16, 124, 65, 0.2);
     }
-    .hero-subtitle { 
-        font-size: 1.1rem; 
-        color: #475569; 
-        text-align: center; 
-        margin-bottom: 40px; 
-    }
+    .top-status-bar span { color: #ffffff !important; }
 
-    /* Metric Cards (Matching your top-border Green design) */
-    div[data-testid="metric-container"], .custom-card {
+    /* Custom Cards (White with Green Top Border) */
+    .custom-card {
         background-color: #ffffff;
         border: 1px solid #e2e8f0;
-        border-top: 4px solid #107c41; /* Excel Green */
-        border-radius: 8px;
+        border-top: 4px solid #107c41;
+        border-radius: 6px;
         padding: 20px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        height: 100%;
     }
     
-    .card-title { font-size: 1.1rem; font-weight: bold; color: #0f172a; margin-bottom: 5px; }
-    .card-text { font-size: 0.95rem; color: #475569; font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+    /* Card Titles & Text */
+    .card-title { font-size: 1.1rem; font-weight: bold; color: #0f172a !important; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;}
+    .card-text { font-size: 0.9rem; color: #475569 !important; font-family: "Times New Roman", serif !important; line-height: 1.5; }
 
-    /* Buttons (Excel Green Theme) */
+    /* Buttons (Solid Excel Green) */
     .stButton > button {
         background-color: #107c41 !important;
-        color: white !important;
+        color: #ffffff !important;
         border: none !important;
-        border-radius: 6px !important;
-        font-family: 'JetBrains Mono', monospace !important;
-        font-weight: 600 !important;
+        border-radius: 4px !important;
+        font-family: 'Times New Roman', serif !important;
+        font-weight: bold !important;
+        padding: 0.5rem 1rem !important;
+        width: 100%;
     }
-    .stButton > button:hover {
-        background-color: #0b5c2f !important; /* Darker Green */
-    }
+    .stButton > button:hover { background-color: #0b5c2f !important; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .stButton > button * { color: #ffffff !important; }
 
-    /* Freemium Lock Box */
-    .lock-box { 
-        border: 1px solid #bbf7d0; 
-        background-color: #f0fdf4; 
-        padding: 20px; 
-        border-radius: 8px; 
-        margin-top: 20px; 
+    /* Input Fields styling for Light Mode */
+    .stTextInput input {
+        background-color: #ffffff !important;
+        border: 1px solid #cbd5e1 !important;
+        color: #0f172a !important;
+        border-radius: 4px !important;
     }
-    .lock-title { font-weight: bold; color: #107c41; font-size: 1.1rem; margin-bottom: 5px; }
-    .lock-text { color: #15803d; font-size: 0.95rem; }
+    .stTextInput input:focus { border-color: #107c41 !important; box-shadow: 0 0 0 1px #107c41 !important; }
+
+    /* Auth Page specific styling */
+    .auth-header { background-color: #107c41; color: white !important; padding: 15px 20px; border-radius: 6px 6px 0 0; margin: -20px -20px 20px -20px; font-weight: bold; font-size: 1.2rem;}
+    .spec-item { display: flex; align-items: flex-start; margin-bottom: 15px; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px;}
+    .spec-icon { color: #107c41 !important; margin-right: 10px; font-weight: bold;}
+    .spec-title { font-weight: bold; font-size: 0.95rem; color: #0f172a !important; margin-bottom: 2px;}
+    .spec-desc { font-size: 0.85rem; color: #64748b !important; }
+
+    /* Bypass Box */
+    .bypass-box { border: 2px solid #bbf7d0; background-color: #f0fdf4; border-radius: 6px; padding: 15px; margin-top: 20px;}
+    .bypass-title { color: #107c41 !important; font-weight: bold; margin-bottom: 5px;}
+    .bypass-text { color: #15803d !important; font-size: 0.85rem; margin-bottom: 15px;}
     
-    /* Top Header Bar */
-    .top-bar {
-        background-color: #107c41;
-        color: white;
-        padding: 10px 20px;
-        border-radius: 8px;
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 12px;
-        margin-bottom: 20px;
-        text-align: right;
+    /* Lock Box */
+    .lock-icon { background-color: #107c41; color: white !important; width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; border-radius: 4px; font-size: 14px; font-weight: bold;}
+    .tag { background-color: #f0fdf4; color: #107c41 !important; border: 1px solid #bbf7d0; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-family: 'JetBrains Mono', monospace !important; font-weight: bold;}
+
+    /* Override Streamlit Metric Boxes to look like cards */
+    div[data-testid="metric-container"] {
+        background-color: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        border-top: 4px solid #107c41 !important;
+        border-radius: 6px !important;
+        padding: 15px !important;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
     }
+    div[data-testid="stMetricLabel"] * { color: #64748b !important; font-family: 'JetBrains Mono', monospace !important; font-size: 0.75rem !important; text-transform: uppercase !important; font-weight: bold !important;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -101,29 +120,36 @@ if 'username' not in st.session_state:
 
 # 4. Clean Sidebar Navigation
 with st.sidebar:
-    st.markdown("<h3 style='color: #107c41; font-weight: bold;'>EDA Engine Cloud</h3>", unsafe_allow_html=True)
+    st.markdown("<h2 style='color: #107c41; font-weight: bold; margin-bottom: 0;'>EDA Engine Cloud</h2>", unsafe_allow_html=True)
+    st.markdown("<p style='color: #64748b; font-size: 0.8rem; font-family: monospace; margin-top: 0;'>Streamlit Community Cloud</p><br>", unsafe_allow_html=True)
     
     if st.session_state.logged_in:
-        st.markdown(f"<p style='color: #475569; font-size: 0.9rem;'>User: {st.session_state.username}</p>", unsafe_allow_html=True)
-        if st.button("Sign Out", use_container_width=True):
+        st.markdown(f"<div style='background: #f0fdf4; border: 1px solid #bbf7d0; padding: 10px; border-radius: 4px; margin-bottom: 20px;'><span style='color: #107c41; font-family: monospace; font-size: 0.8rem; font-weight: bold;'>USER: {st.session_state.username}</span></div>", unsafe_allow_html=True)
+        if st.button("Sign Out"):
             st.session_state.logged_in = False
             st.rerun()
             
     nav = st.radio("Navigate", ["Overview", "Authentication", "Cloud Lite App", "Windows App (Download)"], label_visibility="collapsed")
-    st.markdown("<br><hr><p style='color: #94a3b8; font-size: 0.8rem; font-family: monospace;'>v3.2.0 | Streamlit Quota Active</p>", unsafe_allow_html=True)
+    st.markdown("<br><hr><p style='color: #94a3b8; font-size: 0.75rem; font-family: monospace;'>NODE: DOCKER-CORE-V2.4<br>ENGINE: DUCKDB/POLARS</p>", unsafe_allow_html=True)
 
 # ==========================================
-# PAGE 1: OVERVIEW (Minimal Landing Page)
+# PAGE 1: OVERVIEW 
 # ==========================================
 if nav == "Overview":
-    st.markdown('<div class="top-bar">STATUS: READY (LOCAL/CLOUD) • LIMIT: 5MB ENFORCED</div>', unsafe_allow_html=True)
-    st.markdown('<p class="hero-title">Dataframe Ingestion Pipeline.</p>', unsafe_allow_html=True)
-    st.markdown('<p class="hero-subtitle">Transform raw, dirty matrices into ML-ready datasets with absolute data privacy.</p>', unsafe_allow_html=True)
+    st.markdown("""
+    <div class="top-status-bar">
+        <span>● STREAMLIT CLOUD SANDBOX GATEWAY</span>
+        <span>PORT: 8501-SANDBOX • ISOLATION: SECURE</span>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown('<h1 style="font-size: 2.5rem; font-weight: bold; text-align: center; margin-top: 20px;">Dataframe Ingestion Pipeline</h1>', unsafe_allow_html=True)
+    st.markdown('<p style="font-size: 1.1rem; color: #475569 !important; text-align: center; margin-bottom: 40px;">Transform raw, dirty matrices into ML-ready datasets with absolute data privacy.</p>', unsafe_allow_html=True)
     
     col_btn1, col_btn2, col_btn3 = st.columns([1.5, 1, 1.5])
     with col_btn2:
-        if st.button("Launch Application", use_container_width=True, type="primary"):
-            st.info("Navigate to 'Authentication' in the sidebar to securely connect.")
+        if st.button("Authenticate & Launch Sandbox"):
+            st.info("Navigate to 'Authentication' in the sidebar.")
     
     st.markdown("<br><br>", unsafe_allow_html=True)
     
@@ -151,61 +177,112 @@ if nav == "Overview":
         """, unsafe_allow_html=True)
 
 # ==========================================
-# PAGE 2: AUTHENTICATION
+# PAGE 2: AUTHENTICATION (Matching Image 3)
 # ==========================================
 elif nav == "Authentication":
-    st.markdown("<h3 style='color: #0f172a; font-weight: bold; text-align: center; margin-bottom: 20px;'>Secure Gateway</h3>", unsafe_allow_html=True)
+    st.markdown("""
+    <div class="top-status-bar">
+        <span>EDA Engine Cloud / Authentication Gateway / Node Provisioner</span>
+        <span>TLS 1.3 ENCRYPTED</span>
+    </div>
+    """, unsafe_allow_html=True)
     
     if st.session_state.logged_in:
-        st.success("Session active. You may proceed to the Cloud Lite App or Windows App Download.")
+        st.success("Authentication validated. Active session token generated.")
     else:
-        col1, col2, col3 = st.columns([1, 1.5, 1])
-        with col2:
-            tab1, tab2 = st.tabs(["Sign In", "Register"])
+        col1, col2 = st.columns([1.2, 1])
+        
+        with col1:
+            st.markdown("""
+            <div style="background: white; border: 1px solid #e2e8f0; border-radius: 6px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                <div class="auth-header">
+                    Sign in to EDA Cloud Lite
+                    <div style="font-size: 0.8rem; font-weight: normal; margin-top: 4px;">Authenticate your session to provision an isolated exploratory sandbox.</div>
+                </div>
+                <p style="font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; font-weight: bold; color: #64748b !important; text-transform: uppercase; margin-bottom: 15px;">Federated Analyst Single Sign-On</p>
+            """, unsafe_allow_html=True)
             
-            with tab1:
-                st.text_input("Email")
-                st.text_input("Password", type="password")
-                if st.button("Authenticate", use_container_width=True):
-                    st.session_state.logged_in = True
-                    st.session_state.username = "telemetry-inst-01"
-                    st.success("Authenticated.")
-                    time.sleep(0.5)
-                    st.rerun()
-                    
-            with tab2:
-                st.text_input("Organization")
-                st.text_input("Work Email")
-                st.text_input("Create Password", type="password")
-                if st.button("Provision Account", use_container_width=True):
-                    st.session_state.logged_in = True
-                    st.session_state.username = "New_Analyst"
-                    st.success("Account provisioned.")
-                    time.sleep(0.5)
-                    st.rerun()
+            # Form Inputs
+            email = st.text_input("Work Email / Institutional ID", placeholder="analyst@quant-research.org")
+            token = st.text_input("Security Token / Master Key", type="password", placeholder="••••••••••••••••")
+            
+            st.markdown("<br>", unsafe_allow_html=True)
+            if st.button("Authenticate & Launch Sandbox →"):
+                st.session_state.logged_in = True
+                st.session_state.username = "telemetry-inst-01"
+                st.success("Connecting to secure node...")
+                time.sleep(0.5)
+                st.rerun()
+                
+            st.markdown("</div>", unsafe_allow_html=True)
+
+        with col2:
+            st.markdown("""
+            <div style="background: white; border: 1px solid #e2e8f0; border-radius: 6px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 15px;">
+                    <span style="font-weight: bold; color: #0f172a !important;">Cloud Lite Execution Specs</span>
+                    <span class="tag">HEALTHY</span>
+                </div>
+                
+                <div class="spec-item">
+                    <span class="spec-icon">●</span>
+                    <div>
+                        <div class="spec-title">Strict 5.0 MB RAM Quota</div>
+                        <div class="spec-desc">Enforced via frontend stream validation & config.toml limiters.</div>
+                    </div>
+                </div>
+                
+                <div class="spec-item">
+                    <span class="spec-icon">●</span>
+                    <div>
+                        <div class="spec-title">Zero Ephemeral Persistence</div>
+                        <div class="spec-desc">Tables stored solely in volatile RAM. All PyArrow buffers are purged immediately upon tab or browser termination.</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bypass-box">
+                <span class="tag" style="background: white;">OFFLINE POWER MODE</span>
+                <div class="bypass-title" style="margin-top: 10px; font-size: 1.1rem;">Skip Login with Windows Desktop (.exe)</div>
+                <div class="bypass-text">Need to process data larger than 5 MB? Download the standalone native client for zero cloud dependencies, unmetered multi-gigabyte RAM analysis, and local GPU acceleration.</div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            if st.button("Download Standalone Windows App ↓"):
+                st.info("Navigate to the Download tab in the sidebar.")
 
 # ==========================================
-# PAGE 3: CLOUD LITE APP (The Freemium Funnel)
+# PAGE 3: CLOUD LITE APP (Matching Image 2)
 # ==========================================
 elif nav == "Cloud Lite App":
     if not st.session_state.logged_in:
-        st.warning("Authentication required to access the cloud sandbox.")
+        st.error("Access Denied: Authentication required to access the cloud sandbox.")
     else:
-        st.markdown('<div class="top-bar">SANDBOX ACTIVE: Streamlit Community Cloud (Max 5.0 MB Quota)</div>', unsafe_allow_html=True)
-        st.markdown("<h3 style='color: #0f172a; font-weight: bold;'>Dataframe Ingestion Pipeline</h3>", unsafe_allow_html=True)
-        st.markdown("<p style='color: #475569; font-size: 0.95rem; margin-bottom: 20px;'>Upload a sample file to view structural profiling.</p>", unsafe_allow_html=True)
+        st.markdown("""
+        <div class="top-status-bar">
+            <span>SANDBOX ACTIVE: Streamlit Community Cloud (Max 5.0 MB Quota Enforced)</span>
+            <span>BUFFER: 3.8 / 5.0 MB | ISOLATION: SECURE</span>
+        </div>
+        """, unsafe_allow_html=True)
         
-        uploaded_file = st.file_uploader("FORMATS: .CSV, .XLSX, .PARQUET, .JSON", type=['csv', 'xlsx', 'json', 'parquet'])
+        st.markdown("""
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h2 style="margin: 0; font-weight: bold; color: #0f172a !important; display: flex; align-items: center; gap: 10px;">
+                <span style="color: #107c41;">📄</span> Dataframe Ingestion Pipeline
+            </h2>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #64748b !important; background: #e2e8f0; padding: 4px 8px; border-radius: 4px;">FORMATS: .CSV, .XLSX, .PARQUET, .JSON</span>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        uploaded_file = st.file_uploader("", type=['csv', 'xlsx', 'json', 'parquet'], label_visibility="collapsed")
         
         if uploaded_file:
             file_size_mb = uploaded_file.size / (1024 * 1024)
             
             if file_size_mb > 5.0:
                 st.error(f"Execution Halted: File exceeds 5.0MB payload limit ({file_size_mb:.2f}MB detected).")
-                st.markdown("Navigate to 'Windows App (Download)' for unrestricted local processing.")
             else:
                 try:
-                    # Universal Reader
                     file_ext = uploaded_file.name.split('.')[-1].lower()
                     if file_ext in ['csv', 'txt']:
                         df = pd.read_csv(uploaded_file)
@@ -216,55 +293,105 @@ elif nav == "Cloud Lite App":
                     elif file_ext == 'parquet':
                         df = pd.read_parquet(uploaded_file)
                     
-                    st.markdown("<hr>", unsafe_allow_html=True)
-                    st.markdown("<h4 style='color: #0f172a; font-weight: bold;'>Matrix Dimensionality</h4>", unsafe_allow_html=True)
-                    
-                    col1, col2, col3 = st.columns(3)
+                    # Metrics Grid
+                    col1, col2, col3, col4, col5 = st.columns(5)
                     col1.metric("TOTAL ROWS", f"{df.shape[0]:,}")
                     col2.metric("COLUMNS", f"{df.shape[1]}")
-                    col3.metric("NULL / MISSING", f"{df.isnull().sum().sum():,}")
+                    col3.metric("IN-MEMORY SIZE", f"{file_size_mb:.2f} MB")
+                    col4.metric("TYPING SCHEMAS", f"{len(df.select_dtypes(include=['float64', 'int64']).columns)} Num")
+                    col5.metric("NULL / MISSING", f"{df.isnull().sum().sum():,}")
                     
-                    st.markdown("<br><h4 style='color: #0f172a; font-weight: bold;'>Dataframe Slice Inspection (HEAD 5)</h4>", unsafe_allow_html=True)
+                    st.markdown("""
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 30px; margin-bottom: 10px;">
+                        <h3 style="margin: 0; font-weight: bold; color: #0f172a !important;">Dataframe Slice Inspection <span class="tag" style="background: #107c41; color: white !important; border: none;">HEAD(5)</span></h3>
+                    </div>
+                    """, unsafe_allow_html=True)
                     st.dataframe(df.head(), use_container_width=True)
                     
                     st.markdown("""
-                    <div class="lock-box">
-                        <div class="lock-title">🔒 Pro Engine Analytical Modules Locked</div>
-                        <div class="lock-text">Aggressive Auto-Clean Engine, Visual Analytics Suite, and Deterministic NLP Chatbot are disabled in the Cloud Sandbox.<br><br><b>Download the desktop Windows App (.exe) to unlock multi-gigabyte processing, GPU plotting, and offline LLM access.</b></div>
+                    <div style="display: flex; align-items: center; gap: 10px; margin-top: 40px; margin-bottom: 20px;">
+                        <span style="color: #107c41;">●</span>
+                        <h2 style="margin: 0; font-weight: bold; font-size: 1.5rem; color: #0f172a !important;">Pro Engine Analytical Modules</h2>
+                        <span class="tag">3 LOCKED IN CLOUD SANDBOX</span>
                     </div>
                     """, unsafe_allow_html=True)
                     
+                    # Locked Modules Grid
+                    lc1, lc2, lc3 = st.columns(3)
+                    with lc1:
+                        st.markdown("""
+                        <div class="custom-card" style="display: flex; flex-direction: column; justify-content: space-between; min-height: 250px;">
+                            <div>
+                                <div class="card-title">
+                                    <span class="lock-icon">🔒</span>
+                                    <span class="tag">DESKTOP EXCLUSIVE</span>
+                                </div>
+                                <h3 style="font-weight: bold; font-size: 1.2rem; margin: 15px 0 5px 0;">Aggressive Auto-Clean</h3>
+                                <p class="card-text">Premium Feature Locked: Vectorized cleaning requires native desktop runtime. Download Windows App to execute in-place data repair.</p>
+                            </div>
+                        </div>
+                        """, unsafe_allow_html=True)
+                    with lc2:
+                        st.markdown("""
+                        <div class="custom-card" style="display: flex; flex-direction: column; justify-content: space-between; min-height: 250px;">
+                            <div>
+                                <div class="card-title">
+                                    <span class="lock-icon">🔒</span>
+                                    <span class="tag">GPU ACCELERATED</span>
+                                </div>
+                                <h3 style="font-weight: bold; font-size: 1.2rem; margin: 15px 0 5px 0;">Visual Analytics Suite</h3>
+                                <p class="card-text">Locked in Cloud Lite: Interactive GPU heatmaps & scatter plots disabled on Streamlit Cloud sandbox. Unlock 120 FPS pipelines in Windows Desktop.</p>
+                            </div>
+                        </div>
+                        """, unsafe_allow_html=True)
+                    with lc3:
+                        st.markdown("""
+                        <div class="custom-card" style="display: flex; flex-direction: column; justify-content: space-between; min-height: 250px;">
+                            <div>
+                                <div class="card-title">
+                                    <span class="lock-icon">🔒</span>
+                                    <span class="tag">OFFLINE LLM</span>
+                                </div>
+                                <h3 style="font-weight: bold; font-size: 1.2rem; margin: 15px 0 5px 0;">Deterministic NLP Chat</h3>
+                                <p class="card-text">NLP Engine Disabled: Offline local LLM inferencing available strictly in the standalone Windows application for zero data egress risk.</p>
+                            </div>
+                        </div>
+                        """, unsafe_allow_html=True)
+                    
                 except Exception as e:
-                    st.error(f"Data parse failure. Ensure format is tabular. Error: {e}")
+                    st.error(f"Data parse failure. Error: {e}")
 
 # ==========================================
 # PAGE 4: DOWNLOAD APP
 # ==========================================
 elif nav == "Windows App (Download)":
-    st.markdown('<div class="top-bar">ISOLATION: SECURE • VERSION: V3.2.0 STABLE</div>', unsafe_allow_html=True)
-    st.markdown("<h3 style='color: #0f172a; font-weight: bold; text-align: center;'>Deploy Local Execution Engine</h3>", unsafe_allow_html=True)
-    st.markdown("<p style='color: #475569; text-align: center; font-size: 0.95rem; margin-bottom: 40px;'>Acquire the standalone Windows executable for unrestricted usage.</p>", unsafe_allow_html=True)
+    st.markdown("""
+    <div class="top-status-bar">
+        <span>ISOLATION: SECURE • VERSION: V3.2.0 STABLE</span>
+        <span>100% AIR-GAPPED</span>
+    </div>
+    """, unsafe_allow_html=True)
+    st.markdown("<h2 style='color: #0f172a !important; font-weight: bold; text-align: center; margin-top: 40px;'>Deploy Local Execution Engine</h2>", unsafe_allow_html=True)
+    st.markdown("<p style='color: #475569 !important; text-align: center; font-size: 1.1rem; margin-bottom: 40px;'>Acquire the standalone Windows executable for unrestricted, unlimited data usage.</p>", unsafe_allow_html=True)
     
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         st.markdown("""
-        <div class="custom-card" style="margin-bottom: 20px;">
+        <div class="custom-card" style="margin-bottom: 30px;">
             <div class="card-title">Runtime Capability Matrix</div>
-            <ul style="color: #475569; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; line-height: 1.8;">
-                <li>OS Requirement: Windows 10/11 (64-bit)</li>
-                <li>File Size Quota: UNLIMITED</li>
-                <li>Data Privacy: 100% AIR-GAPPED</li>
-                <li>Compute Architecture: AVX-512 / CUDA Support</li>
+            <ul style="color: #475569 !important; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; line-height: 1.8;">
+                <li><strong>OS Requirement:</strong> Windows 10/11 (64-bit)</li>
+                <li><strong>File Size Quota:</strong> UNLIMITED (Hardware Bound)</li>
+                <li><strong>Data Privacy:</strong> 100% AIR-GAPPED</li>
+                <li><strong>Compute Architecture:</strong> AVX-512 / CUDA Support</li>
             </ul>
         </div>
         """, unsafe_allow_html=True)
         
         dummy_exe_bytes = b"Executable build payload placeholder"
         st.download_button(
-            label="Download Application (Windows x64)", 
+            label="Download Windows App (.exe)", 
             data=dummy_exe_bytes, 
             file_name="EDA_Engine_V3_Installer.exe", 
-            mime="application/octet-stream",
-            use_container_width=True,
-            type="primary"
+            mime="application/octet-stream"
         )
