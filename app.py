@@ -7,30 +7,25 @@ import time
 # 1. Page Configuration
 st.set_page_config(page_title="EDA Engine Cloud", page_icon="📊", layout="wide")
 
-# 2. INJECTING THE "EXCEL GREEN & WHITE" UI/UX AND FILE UPLOADER FIX
+# 2. INJECTING THE "EXCEL GREEN & WHITE" UI/UX
 st.markdown("""
 <style>
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     
-    /* Import Fonts */
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap');
 
-    /* Force Light Mode Backgrounds */
     .stApp { background-color: #f8fafc !important; }
     
-    /* Global Typography overrides to ensure dark text on light backgrounds */
     html, body, p, span, div, h1, h2, h3, h4, h5, h6, label { 
         font-family: "Times New Roman", Times, Georgia, serif !important;
         color: #0f172a !important;
     }
     
-    /* Force Monospace for Data & Metrics */
     code, .stDataFrame, div[data-testid="stMetricValue"] {
         font-family: 'JetBrains Mono', monospace !important;
     }
 
-    /* Top Navigation / Status Bar */
     .top-status-bar {
         background-color: #107c41;
         color: #ffffff !important;
@@ -46,7 +41,6 @@ st.markdown("""
     }
     .top-status-bar span { color: #ffffff !important; }
 
-    /* Custom Cards (White with Green Top Border) */
     .custom-card {
         background-color: #ffffff;
         border: 1px solid #e2e8f0;
@@ -57,12 +51,10 @@ st.markdown("""
         height: 100%;
     }
     
-    /* Card Titles & Text */
     .card-title { font-size: 1.1rem; font-weight: bold; color: #0f172a !important; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;}
     .card-text { font-size: 0.9rem; color: #475569 !important; font-family: "Times New Roman", serif !important; line-height: 1.5; }
 
-    /* Buttons (Solid Excel Green) */
-    .stButton > button {
+    .stButton > button, [data-testid="stDownloadButton"] > button {
         background-color: #107c41 !important;
         color: #ffffff !important;
         border: none !important;
@@ -72,49 +64,50 @@ st.markdown("""
         padding: 0.5rem 1rem !important;
         width: 100%;
     }
-    .stButton > button:hover { background-color: #0b5c2f !important; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-    .stButton > button * { color: #ffffff !important; }
-
-    /* Input Fields styling for Light Mode */
-    .stTextInput input {
-        background-color: #ffffff !important;
-        border: 1px solid #cbd5e1 !important;
-        color: #0f172a !important;
-        border-radius: 4px !important;
+    .stButton > button:hover, [data-testid="stDownloadButton"] > button:hover { 
+        background-color: #0b5c2f !important; 
     }
-    .stTextInput input:focus { border-color: #107c41 !important; box-shadow: 0 0 0 1px #107c41 !important; }
+    .stButton > button *, [data-testid="stDownloadButton"] > button * { color: #ffffff !important; }
 
-    /* NUCLEAR FIX: File Uploader Box */
+    /* File Uploader Dropzone */
     [data-testid="stFileUploader"] section {
-        background-color: #1e293b !important;
-        border: 1px dashed #475569 !important;
+        background-color: #ffffff !important;
+        border: 2px dashed #107c41 !important;
+        border-radius: 8px !important;
     }
     [data-testid="stFileUploader"] div, 
     [data-testid="stFileUploader"] span, 
     [data-testid="stFileUploader"] small,
     [data-testid="stFileUploader"] p,
-    [data-testid="stFileUploader"] label { color: #ffffff !important; }
-    [data-testid="stFileUploader"] svg,
-    [data-testid="stFileUploader"] path { fill: #ffffff !important; stroke: #ffffff !important; }
-    [data-testid="stFileUploader"] button { background-color: #107c41 !important; color: #ffffff !important; border: none !important; width: auto !important; }
-    [data-testid="stFileUploader"] button * { color: #ffffff !important; }
+    [data-testid="stFileUploader"] label { color: #0f172a !important; }
+    [data-testid="stFileUploader"] svg { fill: #107c41 !important; }
+    
+    [data-testid="stUploadedFile"] {
+        background-color: #f0fdf4 !important;
+        border: 1px solid #107c41 !important;
+        border-radius: 4px !important;
+    }
+    [data-testid="stUploadedFile"] div, 
+    [data-testid="stUploadedFile"] span, 
+    [data-testid="stUploadedFile"] small { color: #0f172a !important; }
 
-    /* Auth Page specific styling */
+    [data-testid="stChatInput"] { background-color: #ffffff !important; border: 1px solid #107c41 !important; }
+    [data-testid="stChatInput"] textarea { background-color: #ffffff !important; color: #0f172a !important; }
+    [data-testid="stChatInput"] button { background-color: #107c41 !important; }
+    [data-testid="stChatInput"] button svg { fill: #ffffff !important; }
+
     .auth-header { background-color: #107c41; color: white !important; padding: 15px 20px; border-radius: 6px 6px 0 0; margin: -20px -20px 20px -20px; font-weight: bold; font-size: 1.2rem;}
     .spec-item { display: flex; align-items: flex-start; margin-bottom: 15px; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px;}
     .spec-icon { color: #107c41 !important; margin-right: 10px; font-weight: bold;}
     .spec-title { font-weight: bold; font-size: 0.95rem; color: #0f172a !important; margin-bottom: 2px;}
     .spec-desc { font-size: 0.85rem; color: #64748b !important; }
 
-    /* Bypass Box */
     .bypass-box { border: 2px solid #bbf7d0; background-color: #f0fdf4; border-radius: 6px; padding: 15px; margin-top: 20px;}
     .bypass-title { color: #107c41 !important; font-weight: bold; margin-bottom: 5px;}
     .bypass-text { color: #15803d !important; font-size: 0.85rem; margin-bottom: 15px;}
     
-    /* Tag styling */
     .tag { background-color: #f0fdf4; color: #107c41 !important; border: 1px solid #bbf7d0; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-family: 'JetBrains Mono', monospace !important; font-weight: bold;}
 
-    /* Override Streamlit Metric Boxes to look like cards */
     div[data-testid="metric-container"] {
         background-color: #ffffff !important;
         border: 1px solid #e2e8f0 !important;
@@ -125,7 +118,6 @@ st.markdown("""
     }
     div[data-testid="stMetricLabel"] * { color: #64748b !important; font-family: 'JetBrains Mono', monospace !important; font-size: 0.75rem !important; text-transform: uppercase !important; font-weight: bold !important;}
     
-    /* Make Top Tabs Larger and Serif */
     button[data-baseweb="tab"] {
         font-family: 'Times New Roman', serif !important;
         font-weight: bold !important;
@@ -145,8 +137,9 @@ if 'cleaned' not in st.session_state:
     st.session_state.cleaned = False
 if 'chat_history' not in st.session_state:
     st.session_state.chat_history = []
+if 'last_filename' not in st.session_state:
+    st.session_state.last_filename = "Dataset"
 
-# Header Info
 st.markdown("<h2 style='color: #107c41; font-weight: bold; margin-bottom: 0;'>EDA Engine Cloud</h2>", unsafe_allow_html=True)
 if st.session_state.logged_in:
     st.markdown(f"<p style='color: #107c41; font-family: monospace; font-size: 0.85rem; font-weight: bold; margin-top: 5px;'>Active Session: {st.session_state.username}</p>", unsafe_allow_html=True)
@@ -163,9 +156,6 @@ tab_overview, tab_auth, tab_app, tab_download = st.tabs([
     "📥 Windows App (Unlimited)"
 ])
 
-# ==========================================
-# TAB 1: OVERVIEW 
-# ==========================================
 with tab_overview:
     st.markdown("""
     <div class="top-status-bar">
@@ -207,9 +197,6 @@ with tab_overview:
         </div>
         """, unsafe_allow_html=True)
 
-# ==========================================
-# TAB 2: AUTHENTICATION
-# ==========================================
 with tab_auth:
     st.markdown("""
     <div class="top-status-bar">
@@ -283,9 +270,6 @@ with tab_auth:
             </div>
             """, unsafe_allow_html=True)
 
-# ==========================================
-# TAB 3: FULLY FUNCTIONAL CLOUD APP (Strict 5MB limit)
-# ==========================================
 with tab_app:
     if not st.session_state.logged_in:
         st.error("Access Denied: Authentication required to access the cloud sandbox.")
@@ -318,7 +302,8 @@ with tab_app:
             else:
                 try:
                     file_ext = uploaded_file.name.split('.')[-1].lower()
-                    if st.session_state.df is None:
+                    if st.session_state.df is None or st.session_state.last_filename != uploaded_file.name:
+                        st.session_state.last_filename = uploaded_file.name
                         if file_ext in ['csv', 'txt']:
                             st.session_state.df = pd.read_csv(uploaded_file)
                         elif file_ext in ['xlsx', 'xls']:
@@ -333,7 +318,6 @@ with tab_app:
                     
                     df = st.session_state.df
                     
-                    # Metrics Grid
                     col1, col2, col3, col4, col5 = st.columns(5)
                     col1.metric("TOTAL ROWS", f"{df.shape[0]:,}")
                     col2.metric("COLUMNS", f"{df.shape[1]}")
@@ -343,17 +327,17 @@ with tab_app:
                     
                     st.markdown("<hr>", unsafe_allow_html=True)
                     
-                    # Working Modules inside sub-tabs
+                    # 3 Tabs Total
                     mod1, mod2, mod3 = st.tabs(["🗄️ Aggressive Auto-Clean", "📉 Visual Analytics", "🤖 Deterministic NLP Chat"])
                     
                     with mod1:
                         st.markdown("### Dataset Architecture & Cleaning")
                         st.dataframe(df.head(), use_container_width=True)
+                        
                         if not st.session_state.cleaned:
-                            st.warning("Data is raw. It contains missing values.")
+                            st.warning("Data is raw. It may contain missing values.")
                             if st.button("✨ Execute Aggressive Auto-Clean", use_container_width=True):
                                 with st.spinner("Cleaning dataset..."):
-                                    # Basic cleaning logic
                                     num_cols = df.select_dtypes(include=[np.number]).columns.tolist()
                                     cat_cols = df.select_dtypes(exclude=[np.number]).columns.tolist()
                                     
@@ -371,6 +355,18 @@ with tab_app:
                                     st.rerun()
                         else:
                             st.success("✅ Dataset has been aggressively cleaned. Zero missing values remain.")
+                            
+                            # DOWNLOAD BUTTON IS NOW IMMEDIATELY VISIBLE HERE
+                            st.markdown("#### 💾 Export Processed Dataset")
+                            csv_data = df.to_csv(index=False).encode('utf-8')
+                            out_name = f"Cleaned_{st.session_state.last_filename.split('.')[0]}.csv"
+                            st.download_button(
+                                label="📥 Download Cleaned CSV",
+                                data=csv_data,
+                                file_name=out_name,
+                                mime="text/csv",
+                                use_container_width=True
+                            )
                     
                     with mod2:
                         st.markdown("### Visual Analytics Suite")
@@ -448,13 +444,10 @@ with tab_app:
                                 if response_df is not None:
                                     st.dataframe(response_df)
                                     st.session_state.chat_history.append({"role": "assistant", "type": "dataframe", "content": response_df})
-                                    
+
                 except Exception as e:
                     st.error(f"Data parse failure. Error: {e}")
 
-# ==========================================
-# TAB 4: DOWNLOAD APP
-# ==========================================
 with tab_download:
     st.markdown("""
     <div class="top-status-bar">
