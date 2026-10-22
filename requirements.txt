@@ -1,3 +1,4 @@
+[Live Web App](https://eda-generator.streamlit.app)
 pandas
 plotly
 numpy
