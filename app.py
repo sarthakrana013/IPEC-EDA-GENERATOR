@@ -82,14 +82,27 @@ st.markdown("""
     }
     .stTextInput input:focus { border-color: #107c41 !important; box-shadow: 0 0 0 1px #107c41 !important; }
 
-    /* FIX: File Uploader Box (Dark Background, White Text, Green Button) */
+/* FIX: File Uploader Box (Aggressive White Override) */
     [data-testid="stFileUploadDropzone"] {
         background-color: #1e293b !important;
-        border: 1px solid #334155 !important;
+        border: 1px dashed #475569 !important;
     }
-    [data-testid="stFileUploadDropzone"] * {
+    
+    /* Force all text, spans, and small text inside the box to be white */
+    [data-testid="stFileUploadDropzone"] div, 
+    [data-testid="stFileUploadDropzone"] span, 
+    [data-testid="stFileUploadDropzone"] small,
+    [data-testid="stFileUploadDropzone"] p {
         color: #ffffff !important;
     }
+    
+    /* Force the upload icon to be white */
+    [data-testid="stFileUploadDropzone"] svg {
+        fill: #ffffff !important;
+        stroke: #ffffff !important;
+    }
+    
+    /* Style the Browse files button */
     [data-testid="stFileUploadDropzone"] button {
         background-color: #107c41 !important;
         color: #ffffff !important;
