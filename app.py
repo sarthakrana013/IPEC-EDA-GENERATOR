@@ -69,33 +69,6 @@ st.markdown("""
     }
     .stButton > button *, [data-testid="stDownloadButton"] > button * { color: #ffffff !important; }
 
-    /* ========================================================= */
-    /* NUCLEAR WHITE BOX OVERRIDES FOR INPUTS & CHAT             */
-    /* ========================================================= */
-    
-    /* Force ALL text inputs, password boxes, and textareas to be white */
-    input, textarea, [data-baseweb="input"], [data-baseweb="textarea"], [data-testid="stTextInput"] div {
-        background-color: #ffffff !important;
-        color: #0f172a !important;
-    }
-
-    /* Fix the Chat Input Container specifically */
-    [data-testid="stChatInput"] {
-        background-color: #ffffff !important;
-        border: 2px solid #107c41 !important;
-        border-radius: 8px !important;
-    }
-    [data-testid="stChatInput"] textarea {
-        background-color: #ffffff !important;
-        color: #0f172a !important;
-    }
-    [data-testid="stChatInput"] button {
-        background-color: #107c41 !important;
-    }
-    [data-testid="stChatInput"] button svg {
-        fill: #ffffff !important;
-    }
-
     /* File Uploader Dropzone */
     [data-testid="stFileUploader"] section {
         background-color: #ffffff !important;
@@ -106,9 +79,7 @@ st.markdown("""
     [data-testid="stFileUploader"] span, 
     [data-testid="stFileUploader"] small,
     [data-testid="stFileUploader"] p,
-    [data-testid="stFileUploader"] label {
-        color: #0f172a !important;
-    }
+    [data-testid="stFileUploader"] label { color: #0f172a !important; }
     [data-testid="stFileUploader"] svg { fill: #107c41 !important; }
     
     [data-testid="stUploadedFile"] {
@@ -119,6 +90,12 @@ st.markdown("""
     [data-testid="stUploadedFile"] div, 
     [data-testid="stUploadedFile"] span, 
     [data-testid="stUploadedFile"] small { color: #0f172a !important; }
+
+    /* Chat Input Box */
+    [data-testid="stChatInput"] { background-color: #ffffff !important; border: 1px solid #107c41 !important; }
+    [data-testid="stChatInput"] textarea { background-color: #ffffff !important; color: #0f172a !important; }
+    [data-testid="stChatInput"] button { background-color: #107c41 !important; }
+    [data-testid="stChatInput"] button svg { fill: #ffffff !important; }
 
     /* Clean up the chat messages */
     [data-testid="stChatMessage"] {
@@ -191,9 +168,6 @@ tab_overview, tab_auth, tab_app, tab_download = st.tabs([
     "📥 Windows App (Unlimited)"
 ])
 
-# ==========================================
-# TAB 1: OVERVIEW 
-# ==========================================
 with tab_overview:
     st.markdown("""
     <div class="top-status-bar">
@@ -235,9 +209,6 @@ with tab_overview:
         </div>
         """, unsafe_allow_html=True)
 
-# ==========================================
-# TAB 2: AUTHENTICATION
-# ==========================================
 with tab_auth:
     st.markdown("""
     <div class="top-status-bar">
@@ -294,9 +265,6 @@ with tab_auth:
             </div>
             """, unsafe_allow_html=True)
 
-# ==========================================
-# TAB 3: CLOUD APP
-# ==========================================
 with tab_app:
     if not st.session_state.logged_in:
         st.error("Access Denied: Authentication required to access the cloud sandbox.")
@@ -354,7 +322,7 @@ with tab_app:
                     
                     st.markdown("<hr>", unsafe_allow_html=True)
                     
-                    mod1, mod2, mod3, mod4 = st.tabs(["🗄️ Aggressive Auto-Clean", "📉 Visual Analytics", "🤖 True Cloud AI Assistant", "💾 Export Data"])
+                    mod1, mod2, mod3 = st.tabs(["🗄️ Aggressive Auto-Clean", "📉 Visual Analytics", "🤖 True Cloud AI Assistant"])
                     
                     with mod1:
                         st.markdown("### Dataset Architecture & Cleaning")
@@ -379,6 +347,16 @@ with tab_app:
                                     st.rerun()
                         else:
                             st.success("✅ Dataset has been aggressively cleaned. Zero missing values remain.")
+                            st.markdown("#### 💾 Export Processed Dataset")
+                            csv_data = df.to_csv(index=False).encode('utf-8')
+                            out_name = f"Cleaned_{st.session_state.last_filename.split('.')[0]}.csv"
+                            st.download_button(
+                                label="📥 Download Cleaned CSV",
+                                data=csv_data,
+                                file_name=out_name,
+                                mime="text/csv",
+                                use_container_width=True
+                            )
                     
                     with mod2:
                         st.markdown("### Visual Analytics Suite")
@@ -418,12 +396,18 @@ with tab_app:
                             with st.chat_message("assistant", avatar="🤖"):
                                 with st.spinner("AI is analyzing data..."):
                                     try:
-                                        # AUTOMATICALLY GRABS THE HIDDEN KEY FROM STREAMLIT SECRETS
                                         api_key = st.secrets["GEMINI_API_KEY"]
-                                        
                                         import google.generativeai as genai
                                         genai.configure(api_key=api_key)
-                                        model = genai.GenerativeModel('gemini-pro')
+                                        
+                                        # FIX: Dynamically fetch a valid model to completely prevent 404 errors
+                                        valid_model_name = "gemini-1.5-flash" 
+                                        for m in genai.list_models():
+                                            if 'generateContent' in m.supported_generation_methods:
+                                                valid_model_name = m.name
+                                                break
+                                                
+                                        model = genai.GenerativeModel(valid_model_name)
                                         
                                         context = f"You are a helpful Data Science AI. You are helping a user analyze a dataset. \nHere are the columns: {df.columns.tolist()} \nHere are the data types: {df.dtypes.to_dict()} \nHere is a preview of the first 3 rows: \n{df.head(3).to_string()} \n\nBased on this dataset context, please answer the user's question concisely: {prompt}"
                                         
@@ -438,29 +422,9 @@ with tab_app:
                                     except Exception as e:
                                         st.error(f"AI Engine Error: Connection Issue. Details: {e}")
 
-                    with mod4:
-                        st.markdown("### 💾 Export Processed Dataset")
-                        if not st.session_state.cleaned:
-                            st.error("🛑 STOP! You cannot export this file yet. The dataset still contains uncleaned data.")
-                            st.warning("👉 Go back to the '🗄️ Aggressive Auto-Clean' tab and click the clean button first.")
-                        else:
-                            st.success("✅ Dataset has been cleaned and is ready for export.")
-                            csv_data = df.to_csv(index=False).encode('utf-8')
-                            out_name = f"Cleaned_{st.session_state.last_filename.split('.')[0]}.csv"
-                            st.download_button(
-                                label="📥 Download Cleaned CSV",
-                                data=csv_data,
-                                file_name=out_name,
-                                mime="text/csv",
-                                use_container_width=True
-                            )
-
                 except Exception as e:
                     st.error(f"Data parse failure. Error: {e}")
 
-# ==========================================
-# TAB 4: DOWNLOAD APP
-# ==========================================
 with tab_download:
     st.markdown("""
     <div class="top-status-bar">
