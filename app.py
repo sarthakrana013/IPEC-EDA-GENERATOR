@@ -69,6 +69,33 @@ st.markdown("""
     }
     .stButton > button *, [data-testid="stDownloadButton"] > button * { color: #ffffff !important; }
 
+    /* ========================================================= */
+    /* NUCLEAR WHITE BOX OVERRIDES FOR INPUTS & CHAT             */
+    /* ========================================================= */
+    
+    /* Force ALL text inputs, password boxes, and textareas to be white */
+    input, textarea, [data-baseweb="input"], [data-baseweb="textarea"], [data-testid="stTextInput"] div {
+        background-color: #ffffff !important;
+        color: #0f172a !important;
+    }
+
+    /* Fix the Chat Input Container specifically */
+    [data-testid="stChatInput"] {
+        background-color: #ffffff !important;
+        border: 2px solid #107c41 !important;
+        border-radius: 8px !important;
+    }
+    [data-testid="stChatInput"] textarea {
+        background-color: #ffffff !important;
+        color: #0f172a !important;
+    }
+    [data-testid="stChatInput"] button {
+        background-color: #107c41 !important;
+    }
+    [data-testid="stChatInput"] button svg {
+        fill: #ffffff !important;
+    }
+
     /* File Uploader Dropzone */
     [data-testid="stFileUploader"] section {
         background-color: #ffffff !important;
@@ -79,7 +106,9 @@ st.markdown("""
     [data-testid="stFileUploader"] span, 
     [data-testid="stFileUploader"] small,
     [data-testid="stFileUploader"] p,
-    [data-testid="stFileUploader"] label { color: #0f172a !important; }
+    [data-testid="stFileUploader"] label {
+        color: #0f172a !important;
+    }
     [data-testid="stFileUploader"] svg { fill: #107c41 !important; }
     
     [data-testid="stUploadedFile"] {
@@ -90,11 +119,6 @@ st.markdown("""
     [data-testid="stUploadedFile"] div, 
     [data-testid="stUploadedFile"] span, 
     [data-testid="stUploadedFile"] small { color: #0f172a !important; }
-
-    [data-testid="stChatInput"] { background-color: #ffffff !important; border: 1px solid #107c41 !important; }
-    [data-testid="stChatInput"] textarea { background-color: #ffffff !important; color: #0f172a !important; }
-    [data-testid="stChatInput"] button { background-color: #107c41 !important; }
-    [data-testid="stChatInput"] button svg { fill: #ffffff !important; }
 
     /* Clean up the chat messages */
     [data-testid="stChatMessage"] {
@@ -399,7 +423,8 @@ with tab_app:
                             try:
                                 import google.generativeai as genai
                                 genai.configure(api_key=api_key)
-                                model = genai.GenerativeModel('gemini-1.5-flash')
+                                # FIX: Switched to the universally supported 'gemini-pro' to prevent 404 errors
+                                model = genai.GenerativeModel('gemini-pro')
                                 
                                 for message in st.session_state.chat_history:
                                     avatar_icon = "👤" if message["role"] == "user" else "🤖"
@@ -412,7 +437,6 @@ with tab_app:
                                     
                                     with st.chat_message("assistant", avatar="🤖"):
                                         with st.spinner("AI is analyzing data..."):
-                                            # Send the dataframe structure to the AI so it knows what you're talking about
                                             context = f"You are a helpful Data Science AI. You are helping a user analyze a dataset. \nHere are the columns: {df.columns.tolist()} \nHere are the data types: {df.dtypes.to_dict()} \nHere is a preview of the first 3 rows: \n{df.head(3).to_string()} \n\nBased on this dataset context, please answer the user's question concisely: {prompt}"
                                             
                                             response = model.generate_content(context)
