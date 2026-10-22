@@ -1,5 +1,7 @@
 import streamlit as st
 import pandas as pd
+import plotly.express as px
+import numpy as np
 import time
 
 # 1. Page Configuration
@@ -82,33 +84,20 @@ st.markdown("""
     }
     .stTextInput input:focus { border-color: #107c41 !important; box-shadow: 0 0 0 1px #107c41 !important; }
 
-/* FIX: File Uploader Box (Aggressive White Override) */
-    [data-testid="stFileUploadDropzone"] {
+    /* NUCLEAR FIX: File Uploader Box */
+    [data-testid="stFileUploader"] section {
         background-color: #1e293b !important;
         border: 1px dashed #475569 !important;
     }
-    
-    /* Force all text, spans, and small text inside the box to be white */
-    [data-testid="stFileUploadDropzone"] div, 
-    [data-testid="stFileUploadDropzone"] span, 
-    [data-testid="stFileUploadDropzone"] small,
-    [data-testid="stFileUploadDropzone"] p {
-        color: #ffffff !important;
-    }
-    
-    /* Force the upload icon to be white */
-    [data-testid="stFileUploadDropzone"] svg {
-        fill: #ffffff !important;
-        stroke: #ffffff !important;
-    }
-    
-    /* Style the Browse files button */
-    [data-testid="stFileUploadDropzone"] button {
-        background-color: #107c41 !important;
-        color: #ffffff !important;
-        border: none !important;
-        width: auto !important;
-    }
+    [data-testid="stFileUploader"] div, 
+    [data-testid="stFileUploader"] span, 
+    [data-testid="stFileUploader"] small,
+    [data-testid="stFileUploader"] p,
+    [data-testid="stFileUploader"] label { color: #ffffff !important; }
+    [data-testid="stFileUploader"] svg,
+    [data-testid="stFileUploader"] path { fill: #ffffff !important; stroke: #ffffff !important; }
+    [data-testid="stFileUploader"] button { background-color: #107c41 !important; color: #ffffff !important; border: none !important; width: auto !important; }
+    [data-testid="stFileUploader"] button * { color: #ffffff !important; }
 
     /* Auth Page specific styling */
     .auth-header { background-color: #107c41; color: white !important; padding: 15px 20px; border-radius: 6px 6px 0 0; margin: -20px -20px 20px -20px; font-weight: bold; font-size: 1.2rem;}
@@ -122,8 +111,7 @@ st.markdown("""
     .bypass-title { color: #107c41 !important; font-weight: bold; margin-bottom: 5px;}
     .bypass-text { color: #15803d !important; font-size: 0.85rem; margin-bottom: 15px;}
     
-    /* Lock Box */
-    .lock-icon { background-color: #107c41; color: white !important; width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; border-radius: 4px; font-size: 14px; font-weight: bold;}
+    /* Tag styling */
     .tag { background-color: #f0fdf4; color: #107c41 !important; border: 1px solid #bbf7d0; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-family: 'JetBrains Mono', monospace !important; font-weight: bold;}
 
     /* Override Streamlit Metric Boxes to look like cards */
@@ -146,11 +134,17 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# 3. Session State for Authentication
+# 3. Session State 
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
 if 'username' not in st.session_state:
     st.session_state.username = ""
+if 'df' not in st.session_state:
+    st.session_state.df = None
+if 'cleaned' not in st.session_state:
+    st.session_state.cleaned = False
+if 'chat_history' not in st.session_state:
+    st.session_state.chat_history = []
 
 # Header Info
 st.markdown("<h2 style='color: #107c41; font-weight: bold; margin-bottom: 0;'>EDA Engine Cloud</h2>", unsafe_allow_html=True)
@@ -162,11 +156,11 @@ else:
 st.markdown("<br>", unsafe_allow_html=True)
 
 # 4. Top Navigation Tabs
-tab_overview, tab_auth, tab_lite, tab_download = st.tabs([
+tab_overview, tab_auth, tab_app, tab_download = st.tabs([
     "🏠 Overview", 
     "🔐 Authentication", 
-    "⚡ Cloud Lite App", 
-    "📥 Windows App (Download)"
+    "⚡ Cloud App (Max 5MB)", 
+    "📥 Windows App (Unlimited)"
 ])
 
 # ==========================================
@@ -290,17 +284,17 @@ with tab_auth:
             """, unsafe_allow_html=True)
 
 # ==========================================
-# TAB 3: CLOUD LITE APP
+# TAB 3: FULLY FUNCTIONAL CLOUD APP (Strict 5MB limit)
 # ==========================================
-with tab_lite:
+with tab_app:
     if not st.session_state.logged_in:
         st.error("Access Denied: Authentication required to access the cloud sandbox.")
         st.info("Navigate to the '🔐 Authentication' tab to sign in.")
     else:
         st.markdown("""
         <div class="top-status-bar">
-            <span>SANDBOX ACTIVE: Streamlit Community Cloud (Max 5.0 MB Quota Enforced)</span>
-            <span>BUFFER: 3.8 / 5.0 MB | ISOLATION: SECURE</span>
+            <span>SANDBOX ACTIVE: Fully Functional Engine (Max 5.0 MB Quota Enforced)</span>
+            <span>ISOLATION: SECURE</span>
         </div>
         """, unsafe_allow_html=True)
         
@@ -311,6 +305,7 @@ with tab_lite:
             </h2>
             <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #64748b !important; background: #e2e8f0; padding: 4px 8px; border-radius: 4px;">FORMATS: .CSV, .XLSX, .PARQUET, .JSON</span>
         </div>
+        <p style="color: #ef4444; font-weight: bold;">⚠️ MAXIMUM UPLOAD LIMIT: 5.0 MB worth of files can be entered. Larger files will be automatically rejected to prevent server overload.</p>
         """, unsafe_allow_html=True)
         
         uploaded_file = st.file_uploader("", type=['csv', 'xlsx', 'json', 'parquet'], label_visibility="collapsed")
@@ -319,18 +314,24 @@ with tab_lite:
             file_size_mb = uploaded_file.size / (1024 * 1024)
             
             if file_size_mb > 5.0:
-                st.error(f"Execution Halted: File exceeds 5.0MB payload limit ({file_size_mb:.2f}MB detected).")
+                st.error(f"🛑 REJECTED: Your file is {file_size_mb:.2f}MB. Only 5.0 MB worth of files can be entered here. Please use the Desktop App for larger datasets.")
             else:
                 try:
                     file_ext = uploaded_file.name.split('.')[-1].lower()
-                    if file_ext in ['csv', 'txt']:
-                        df = pd.read_csv(uploaded_file)
-                    elif file_ext in ['xlsx', 'xls']:
-                        df = pd.read_excel(uploaded_file)
-                    elif file_ext == 'json':
-                        df = pd.read_json(uploaded_file)
-                    elif file_ext == 'parquet':
-                        df = pd.read_parquet(uploaded_file)
+                    if st.session_state.df is None:
+                        if file_ext in ['csv', 'txt']:
+                            st.session_state.df = pd.read_csv(uploaded_file)
+                        elif file_ext in ['xlsx', 'xls']:
+                            st.session_state.df = pd.read_excel(uploaded_file)
+                        elif file_ext == 'json':
+                            st.session_state.df = pd.read_json(uploaded_file)
+                        elif file_ext == 'parquet':
+                            st.session_state.df = pd.read_parquet(uploaded_file)
+                        st.session_state.df.columns = st.session_state.df.columns.str.strip()
+                        st.session_state.cleaned = False
+                        st.session_state.chat_history = []
+                    
+                    df = st.session_state.df
                     
                     # Metrics Grid
                     col1, col2, col3, col4, col5 = st.columns(5)
@@ -340,63 +341,114 @@ with tab_lite:
                     col4.metric("TYPING SCHEMAS", f"{len(df.select_dtypes(include=['float64', 'int64']).columns)} Num")
                     col5.metric("NULL / MISSING", f"{df.isnull().sum().sum():,}")
                     
-                    st.markdown("""
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 30px; margin-bottom: 10px;">
-                        <h3 style="margin: 0; font-weight: bold; color: #0f172a !important;">Dataframe Slice Inspection <span class="tag" style="background: #107c41; color: white !important; border: none;">HEAD(5)</span></h3>
-                    </div>
-                    """, unsafe_allow_html=True)
-                    st.dataframe(df.head(), use_container_width=True)
+                    st.markdown("<hr>", unsafe_allow_html=True)
                     
-                    st.markdown("""
-                    <div style="display: flex; align-items: center; gap: 10px; margin-top: 40px; margin-bottom: 20px;">
-                        <span style="color: #107c41;">●</span>
-                        <h2 style="margin: 0; font-weight: bold; font-size: 1.5rem; color: #0f172a !important;">Pro Engine Analytical Modules</h2>
-                        <span class="tag">3 LOCKED IN CLOUD SANDBOX</span>
-                    </div>
-                    """, unsafe_allow_html=True)
+                    # Working Modules inside sub-tabs
+                    mod1, mod2, mod3 = st.tabs(["🗄️ Aggressive Auto-Clean", "📉 Visual Analytics", "🤖 Deterministic NLP Chat"])
                     
-                    # Locked Modules Grid
-                    lc1, lc2, lc3 = st.columns(3)
-                    with lc1:
-                        st.markdown("""
-                        <div class="custom-card" style="display: flex; flex-direction: column; justify-content: space-between; min-height: 250px;">
-                            <div>
-                                <div class="card-title">
-                                    <span class="lock-icon">🔒</span>
-                                    <span class="tag">DESKTOP EXCLUSIVE</span>
-                                </div>
-                                <h3 style="font-weight: bold; font-size: 1.2rem; margin: 15px 0 5px 0;">Aggressive Auto-Clean</h3>
-                                <p class="card-text">Premium Feature Locked: Vectorized cleaning requires native desktop runtime. Download Windows App to execute in-place data repair.</p>
-                            </div>
-                        </div>
-                        """, unsafe_allow_html=True)
-                    with lc2:
-                        st.markdown("""
-                        <div class="custom-card" style="display: flex; flex-direction: column; justify-content: space-between; min-height: 250px;">
-                            <div>
-                                <div class="card-title">
-                                    <span class="lock-icon">🔒</span>
-                                    <span class="tag">GPU ACCELERATED</span>
-                                </div>
-                                <h3 style="font-weight: bold; font-size: 1.2rem; margin: 15px 0 5px 0;">Visual Analytics Suite</h3>
-                                <p class="card-text">Locked in Cloud Lite: Interactive GPU heatmaps & scatter plots disabled on Streamlit Cloud sandbox. Unlock 120 FPS pipelines in Windows Desktop.</p>
-                            </div>
-                        </div>
-                        """, unsafe_allow_html=True)
-                    with lc3:
-                        st.markdown("""
-                        <div class="custom-card" style="display: flex; flex-direction: column; justify-content: space-between; min-height: 250px;">
-                            <div>
-                                <div class="card-title">
-                                    <span class="lock-icon">🔒</span>
-                                    <span class="tag">OFFLINE LLM</span>
-                                </div>
-                                <h3 style="font-weight: bold; font-size: 1.2rem; margin: 15px 0 5px 0;">Deterministic NLP Chat</h3>
-                                <p class="card-text">NLP Engine Disabled: Offline local LLM inferencing available strictly in the standalone Windows application for zero data egress risk.</p>
-                            </div>
-                        </div>
-                        """, unsafe_allow_html=True)
+                    with mod1:
+                        st.markdown("### Dataset Architecture & Cleaning")
+                        st.dataframe(df.head(), use_container_width=True)
+                        if not st.session_state.cleaned:
+                            st.warning("Data is raw. It contains missing values.")
+                            if st.button("✨ Execute Aggressive Auto-Clean", use_container_width=True):
+                                with st.spinner("Cleaning dataset..."):
+                                    # Basic cleaning logic
+                                    num_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+                                    cat_cols = df.select_dtypes(exclude=[np.number]).columns.tolist()
+                                    
+                                    for col in num_cols:
+                                        median_val = df[col].median()
+                                        df[col] = df[col].fillna(median_val if pd.notna(median_val) else 0)
+                                        
+                                    for col in cat_cols:
+                                        mode_series = df[col].mode()
+                                        mode_val = mode_series[0] if not mode_series.empty else "Unknown"
+                                        df[col] = df[col].fillna(mode_val)
+                                        
+                                    st.session_state.df = df
+                                    st.session_state.cleaned = True
+                                    st.rerun()
+                        else:
+                            st.success("✅ Dataset has been aggressively cleaned. Zero missing values remain.")
                     
+                    with mod2:
+                        st.markdown("### Visual Analytics Suite")
+                        numeric_cols_viz = df.select_dtypes(include=[np.number]).columns.tolist()
+                        
+                        if len(numeric_cols_viz) > 0:
+                            chart_type = st.radio("Select Analysis Type:", ["Correlation Analysis", "Feature Distribution", "Bivariate Scatter"], horizontal=True)
+                            
+                            if chart_type == "Correlation Analysis" and len(numeric_cols_viz) >= 2:
+                                custom_colors = [[0.0, '#ffffff'], [1.0, '#107c41']] 
+                                fig = px.imshow(df[numeric_cols_viz].corr(), text_auto=".2f", color_continuous_scale=custom_colors, aspect="auto")
+                                st.plotly_chart(fig, use_container_width=True)
+                            elif chart_type == "Feature Distribution" and numeric_cols_viz:
+                                selected_col = st.selectbox("Select Feature:", numeric_cols_viz)
+                                fig = px.histogram(df, x=selected_col, color_discrete_sequence=['#107c41'])
+                                st.plotly_chart(fig, use_container_width=True)
+                            elif chart_type == "Bivariate Scatter" and len(numeric_cols_viz) >= 2:
+                                col_x = st.selectbox("X-Axis Feature:", numeric_cols_viz, index=0)
+                                col_y = st.selectbox("Y-Axis Feature:", numeric_cols_viz, index=1 if len(numeric_cols_viz)>1 else 0)
+                                fig = px.scatter(df, x=col_x, y=col_y, color_discrete_sequence=['#107c41'])
+                                st.plotly_chart(fig, use_container_width=True)
+                        else:
+                            st.info("No numerical columns available for visualizations.")
+                            
+                    with mod3:
+                        st.markdown("### 💬 Deterministic NLP Chat")
+                        st.caption("Ask questions about specific columns. Try: 'What is the average of [column]?'")
+                        
+                        for message in st.session_state.chat_history:
+                            with st.chat_message(message["role"]):
+                                if message["type"] == "text":
+                                    st.markdown(message["content"])
+                                elif message["type"] == "dataframe":
+                                    st.dataframe(message["content"])
+
+                        if prompt := st.chat_input("Ask about your data..."):
+                            st.chat_message("user").markdown(prompt)
+                            st.session_state.chat_history.append({"role": "user", "type": "text", "content": prompt})
+                            
+                            with st.chat_message("assistant"):
+                                prompt_lower = prompt.lower()
+                                response_text = ""
+                                response_df = None
+                                
+                                mentioned_cols = [c for c in df.columns if c.lower() in prompt_lower]
+                                
+                                if mentioned_cols:
+                                    col = mentioned_cols[0] 
+                                    if any(word in prompt_lower for word in ['max', 'maximum', 'highest']):
+                                        if pd.api.types.is_numeric_dtype(df[col]):
+                                            response_text = f"The maximum value in **{col}** is {df[col].max():.2f}."
+                                        else:
+                                            response_text = f"Column **{col}** is not numeric."
+                                    elif any(word in prompt_lower for word in ['min', 'minimum', 'lowest']):
+                                        if pd.api.types.is_numeric_dtype(df[col]):
+                                            response_text = f"The minimum value in **{col}** is {df[col].min():.2f}."
+                                        else:
+                                            response_text = f"Column **{col}** is not numeric."
+                                    elif any(word in prompt_lower for word in ['mean', 'average', 'avg']):
+                                        if pd.api.types.is_numeric_dtype(df[col]):
+                                            response_text = f"The average value of **{col}** is {df[col].mean():.2f}."
+                                        else:
+                                            response_text = f"Column **{col}** is not numeric."
+                                    else:
+                                        response_text = f"Here is a quick look at the data inside **{col}**:"
+                                        response_df = df[[col]].head(5)
+                                else:
+                                    if any(word in prompt_lower for word in ['shape', 'size', 'row', 'column']):
+                                        response_text = f"Your dataset consists of **{df.shape[0]:,} rows** and **{df.shape[1]} columns**."
+                                    else:
+                                        response_text = "🤖 *I am your offline Data NLP Engine.* Mention a specific column name (e.g. 'what is the average of [column]')."
+                                
+                                st.markdown(response_text)
+                                st.session_state.chat_history.append({"role": "assistant", "type": "text", "content": response_text})
+                                if response_df is not None:
+                                    st.dataframe(response_df)
+                                    st.session_state.chat_history.append({"role": "assistant", "type": "dataframe", "content": response_df})
+                                    
                 except Exception as e:
                     st.error(f"Data parse failure. Error: {e}")
 
@@ -434,3 +486,5 @@ with tab_download:
             file_name="EDA_Engine_V3_Installer.exe", 
             mime="application/octet-stream"
         )
+
+```
