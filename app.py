@@ -91,13 +91,12 @@ st.markdown("""
     [data-testid="stUploadedFile"] span, 
     [data-testid="stUploadedFile"] small { color: #0f172a !important; }
 
-    /* Fix Chat Input Box */
     [data-testid="stChatInput"] { background-color: #ffffff !important; border: 1px solid #107c41 !important; }
     [data-testid="stChatInput"] textarea { background-color: #ffffff !important; color: #0f172a !important; }
     [data-testid="stChatInput"] button { background-color: #107c41 !important; }
     [data-testid="stChatInput"] button svg { fill: #ffffff !important; }
 
-    /* FIX: Force Chat Bubbles to be White & Readable */
+    /* Clean up the chat messages */
     [data-testid="stChatMessage"] {
         background-color: #ffffff !important;
         border: 1px solid #e2e8f0 !important;
@@ -168,6 +167,9 @@ tab_overview, tab_auth, tab_app, tab_download = st.tabs([
     "📥 Windows App (Unlimited)"
 ])
 
+# ==========================================
+# TAB 1: OVERVIEW 
+# ==========================================
 with tab_overview:
     st.markdown("""
     <div class="top-status-bar">
@@ -204,11 +206,14 @@ with tab_overview:
     with c3:
         st.markdown("""
         <div class="custom-card">
-            <div class="card-title">Online Cloud NLP</div>
-            <div class="card-text">Query matrices via our secure cloud servers using standard language. The online LLM outputs results instantly.</div>
+            <div class="card-title">True Cloud AI</div>
+            <div class="card-text">Powered by Google Gemini. Ask any question about your data and receive instant, intelligent analysis.</div>
         </div>
         """, unsafe_allow_html=True)
 
+# ==========================================
+# TAB 2: AUTHENTICATION
+# ==========================================
 with tab_auth:
     st.markdown("""
     <div class="top-status-bar">
@@ -265,6 +270,9 @@ with tab_auth:
             </div>
             """, unsafe_allow_html=True)
 
+# ==========================================
+# TAB 3: CLOUD APP
+# ==========================================
 with tab_app:
     if not st.session_state.logged_in:
         st.error("Access Denied: Authentication required to access the cloud sandbox.")
@@ -322,7 +330,7 @@ with tab_app:
                     
                     st.markdown("<hr>", unsafe_allow_html=True)
                     
-                    mod1, mod2, mod3 = st.tabs(["🗄️ Aggressive Auto-Clean", "📉 Visual Analytics", "🤖 Online AI Data Assistant"])
+                    mod1, mod2, mod3 = st.tabs(["🗄️ Aggressive Auto-Clean", "📉 Visual Analytics", "🤖 True Cloud AI Assistant"])
                     
                     with mod1:
                         st.markdown("### Dataset Architecture & Cleaning")
@@ -381,70 +389,49 @@ with tab_app:
                             st.info("No numerical columns available for visualizations.")
                             
                     with mod3:
-                        st.markdown("### ☁️ Online Cloud NLP Engine")
-                        st.caption("Ask questions about specific columns, or say 'tell me about the whole dataset'.")
+                        st.markdown("### ☁️ True Online AI Data Assistant")
+                        st.caption("Powered by Google Gemini API. Ask absolutely anything about your dataset.")
                         
-                        for message in st.session_state.chat_history:
-                            # FIX: Explicitly set emojis as avatars to fix broken Material Icons
-                            avatar_icon = "👤" if message["role"] == "user" else "🤖"
-                            with st.chat_message(message["role"], avatar=avatar_icon):
-                                if message["type"] == "text":
-                                    st.markdown(message["content"])
-                                elif message["type"] == "dataframe":
-                                    st.dataframe(message["content"])
+                        # API KEY INPUT BOX
+                        api_key = st.text_input("Enter your free Google Gemini API Key to wake up the AI:", type="password", help="Get a free key at aistudio.google.com")
+                        
+                        if api_key:
+                            try:
+                                import google.generativeai as genai
+                                genai.configure(api_key=api_key)
+                                model = genai.GenerativeModel('gemini-1.5-flash')
+                                
+                                for message in st.session_state.chat_history:
+                                    avatar_icon = "👤" if message["role"] == "user" else "🤖"
+                                    with st.chat_message(message["role"], avatar=avatar_icon):
+                                        st.markdown(message["content"])
 
-                        if prompt := st.chat_input("Ask the Cloud AI about your data..."):
-                            st.chat_message("user", avatar="👤").markdown(prompt)
-                            st.session_state.chat_history.append({"role": "user", "type": "text", "content": prompt})
+                                if prompt := st.chat_input("Ask the AI anything about your data..."):
+                                    st.chat_message("user", avatar="👤").markdown(prompt)
+                                    st.session_state.chat_history.append({"role": "user", "content": prompt})
+                                    
+                                    with st.chat_message("assistant", avatar="🤖"):
+                                        with st.spinner("AI is analyzing data..."):
+                                            # Send the dataframe structure to the AI so it knows what you're talking about
+                                            context = f"You are a helpful Data Science AI. You are helping a user analyze a dataset. \nHere are the columns: {df.columns.tolist()} \nHere are the data types: {df.dtypes.to_dict()} \nHere is a preview of the first 3 rows: \n{df.head(3).to_string()} \n\nBased on this dataset context, please answer the user's question concisely: {prompt}"
+                                            
+                                            response = model.generate_content(context)
+                                            st.markdown(response.text)
+                                            st.session_state.chat_history.append({"role": "assistant", "content": response.text})
                             
-                            with st.chat_message("assistant", avatar="🤖"):
-                                prompt_lower = prompt.lower()
-                                response_text = ""
-                                response_df = None
-                                
-                                mentioned_cols = [c for c in df.columns if c.lower() in prompt_lower]
-                                
-                                # UPGRADE: Smart recognition for "Whole Dataset" queries
-                                if any(word in prompt_lower for word in ['whole dataset', 'entire dataset', 'summary', 'describe', 'overview', 'all data']):
-                                    response_text = "Here is a complete statistical summary and overview of your dataset computed by the cloud engine:"
-                                    response_df = df.describe().T
-                                
-                                elif mentioned_cols:
-                                    col = mentioned_cols[0] 
-                                    if any(word in prompt_lower for word in ['max', 'maximum', 'highest']):
-                                        if pd.api.types.is_numeric_dtype(df[col]):
-                                            response_text = f"The maximum value in **{col}** is {df[col].max():.2f}."
-                                        else:
-                                            response_text = f"Column **{col}** is not numeric."
-                                    elif any(word in prompt_lower for word in ['min', 'minimum', 'lowest']):
-                                        if pd.api.types.is_numeric_dtype(df[col]):
-                                            response_text = f"The minimum value in **{col}** is {df[col].min():.2f}."
-                                        else:
-                                            response_text = f"Column **{col}** is not numeric."
-                                    elif any(word in prompt_lower for word in ['mean', 'average', 'avg']):
-                                        if pd.api.types.is_numeric_dtype(df[col]):
-                                            response_text = f"The average value of **{col}** is {df[col].mean():.2f}."
-                                        else:
-                                            response_text = f"Column **{col}** is not numeric."
-                                    else:
-                                        response_text = f"Here is a quick look at the data inside **{col}**:"
-                                        response_df = df[[col]].head(5)
-                                else:
-                                    if any(word in prompt_lower for word in ['shape', 'size', 'row', 'column']):
-                                        response_text = f"Your dataset consists of **{df.shape[0]:,} rows** and **{df.shape[1]} columns**."
-                                    else:
-                                        # FIX: Rebranded as Online NLP
-                                        response_text = "🤖 *I am your Online Cloud AI Assistant.* You can ask me for a 'summary of the whole dataset', or mention a specific column name (e.g., 'what is the average of [column]')."
-                                
-                                st.markdown(response_text)
-                                st.session_state.chat_history.append({"role": "assistant", "type": "text", "content": response_text})
-                                if response_df is not None:
-                                    st.dataframe(response_df)
-                                    st.session_state.chat_history.append({"role": "assistant", "type": "dataframe", "content": response_df})
+                            except ImportError:
+                                st.error("🚨 Missing Library! Please add `google-generativeai` to your requirements.txt file on GitHub.")
+                            except Exception as e:
+                                st.error(f"AI Engine Error: Invalid API Key or Connection Issue. Details: {e}")
+                        else:
+                            st.info("🔒 The AI brain is asleep. Paste your Google Gemini API Key in the box above to activate it.")
 
                 except Exception as e:
                     st.error(f"Data parse failure. Error: {e}")
 
+# ==========================================
+# TAB 4: DOWNLOAD APP
+# ==========================================
 with tab_download:
     st.markdown("""
     <div class="top-status-bar">
