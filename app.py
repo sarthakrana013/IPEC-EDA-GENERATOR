@@ -17,7 +17,8 @@ footer {visibility: hidden;}
 
 .stApp { background-color: #f8fafc !important; }
 
-html, body, p, span, div, h1, h2, h3, h4, h5, h6, label { 
+/* FIX: Removed div and span to prevent breaking Dataframes and Toolbars */
+html, body, p, h1, h2, h3, h4, h5, h6, label { 
     font-family: "Times New Roman", Times, Georgia, serif !important;
     color: #0f172a !important;
 }
@@ -101,6 +102,24 @@ input, textarea, [data-baseweb="input"], [data-baseweb="textarea"], [data-testid
 
 [data-testid="stChatMessage"] { background-color: #ffffff !important; border: 1px solid #e2e8f0 !important; border-radius: 8px !important; padding: 10px !important; }
 [data-testid="stChatMessage"] * { color: #0f172a !important; }
+
+/* ========================================================= */
+/* FIX FOR DATAFRAME TOOLBAR AND TOOLTIPS                    */
+/* ========================================================= */
+[data-testid="stElementToolbar"] {
+    background-color: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 6px !important;
+}
+[data-testid="stElementToolbar"] button svg {
+    fill: #107c41 !important;
+}
+div[data-baseweb="tooltip"] > div {
+    background-color: #107c41 !important;
+    color: #ffffff !important;
+    border-radius: 4px !important;
+}
+/* ========================================================= */
 
 .tag { background-color: #f0fdf4; color: #107c41 !important; border: 1px solid #bbf7d0; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-family: 'JetBrains Mono', monospace !important; font-weight: bold;}
 
@@ -189,7 +208,7 @@ with tab_overview:
 
     st.markdown("<hr style='border: 1px solid #e2e8f0; margin: 40px 0;'>", unsafe_allow_html=True)
 
-    # NEW SECTION: Platform Overview
+    # Platform Overview
     st.markdown("""
 <h2 style="color: #0f172a !important; font-weight: bold; margin-bottom: 15px;">Platform Architecture & Objective</h2>
 <p style="color: #475569 !important; font-size: 1.05rem; line-height: 1.6; margin-bottom: 30px;">
@@ -197,7 +216,7 @@ The <b>EDA Engine Cloud</b> is a purpose-built automated pipeline designed to el
 </p>
 """, unsafe_allow_html=True)
 
-    # NEW SECTION: Competitive Advantage
+    # Competitive Advantage
     st.markdown("""
 <h2 style="color: #0f172a !important; font-weight: bold; margin-bottom: 20px;">The Competitive Advantage: Why Choose Us?</h2>
 """, unsafe_allow_html=True)
@@ -324,7 +343,7 @@ with tab_auth:
 </div>
 """, unsafe_allow_html=True)
             
-            st.checkbox("Persist authenticated token on this browser for 30 days (ephemeral DuckDB session cache only).", value=True)
+            st.checkbox("Persist authenticated token on this browser for 30 days.", value=True)
             
             st.markdown("<br>", unsafe_allow_html=True)
             if st.button("Authenticate & Launch Sandbox →"):
@@ -336,7 +355,7 @@ with tab_auth:
                 
             st.markdown("""
 <p style="text-align: center; font-size: 0.75rem; color: #94a3b8 !important; margin-top: 20px;">
-    By connecting, you accept the 5.0 MB in-memory buffer constraint and automatic Firecracker microVM teardown on inactivity.
+    By connecting, you accept the 5.0 MB in-memory buffer constraint and automatic microVM teardown on inactivity.
 </p>
 </div>
 """, unsafe_allow_html=True)
@@ -348,14 +367,14 @@ with tab_auth:
         <span style="font-weight: bold; color: #0f172a !important; display: flex; align-items: center; gap: 8px;">
             <span style="color: #107c41;">☷</span> Cloud Lite Execution Specs
         </span>
-        <span style="background-color: #f0fdf4; color: #107c41 !important; border: 1px solid #bbf7d0; padding: 2px 8px; border-radius: 4px; font-size: 0.65rem; font-family: 'JetBrains Mono', monospace !important; font-weight: bold;">HEALTHY</span>
+        <span class="tag">HEALTHY</span>
     </div>
     
     <div style="display: flex; align-items: flex-start; margin-bottom: 15px; border-bottom: 1px solid #f1f5f9; padding-bottom: 15px;">
         <span style="color: #107c41 !important; margin-right: 12px; font-weight: bold; font-size: 1.1rem;">◎</span>
         <div>
             <div style="font-weight: bold; font-size: 0.95rem; color: #0f172a !important; margin-bottom: 4px;">Strict 5.0 MB RAM Quota</div>
-            <div style="font-size: 0.85rem; color: #64748b !important; line-height: 1.4;">Enforced via frontend stream validation & <code style="background: #f1f5f9; padding: 2px 4px; border-radius: 3px; font-size: 0.75rem;">.streamlit/config.toml</code> limiters.</div>
+            <div style="font-size: 0.85rem; color: #64748b !important; line-height: 1.4;">Enforced via frontend stream validation & config.toml limiters.</div>
         </div>
     </div>
     
@@ -371,7 +390,7 @@ with tab_auth:
         <span style="color: #107c41 !important; margin-right: 12px; font-weight: bold; font-size: 1.1rem;">⚲</span>
         <div>
             <div style="font-weight: bold; font-size: 0.95rem; color: #0f172a !important; margin-bottom: 4px;">Streamlit Pod Availability</div>
-            <div style="font-size: 0.85rem; color: #64748b !important; line-height: 1.4;">14 warm worker instances stand ready for instantaneous sub-12ms query dispatch via DuckDB WebAssembly bindings.</div>
+            <div style="font-size: 0.85rem; color: #64748b !important; line-height: 1.4;">14 warm worker instances stand ready for instantaneous sub-12ms query dispatch.</div>
         </div>
     </div>
     
