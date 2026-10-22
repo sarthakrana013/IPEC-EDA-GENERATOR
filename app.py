@@ -3,9 +3,9 @@ import pandas as pd
 import time
 
 # 1. Page Configuration
-st.set_page_config(page_title="EDA Engine Cloud", page_icon="📊", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(page_title="EDA Engine Cloud", page_icon="📊", layout="wide")
 
-# 2. INJECTING THE "EXCEL GREEN & WHITE" UI/UX
+# 2. INJECTING THE "EXCEL GREEN & WHITE" UI/UX AND FILE UPLOADER FIX
 st.markdown("""
 <style>
     #MainMenu {visibility: hidden;}
@@ -16,7 +16,6 @@ st.markdown("""
 
     /* Force Light Mode Backgrounds */
     .stApp { background-color: #f8fafc !important; }
-    [data-testid="stSidebar"] { background-color: #ffffff !important; border-right: 1px solid #e2e8f0 !important; }
     
     /* Global Typography overrides to ensure dark text on light backgrounds */
     html, body, p, span, div, h1, h2, h3, h4, h5, h6, label { 
@@ -83,6 +82,21 @@ st.markdown("""
     }
     .stTextInput input:focus { border-color: #107c41 !important; box-shadow: 0 0 0 1px #107c41 !important; }
 
+    /* FIX: File Uploader Box (Dark Background, White Text, Green Button) */
+    [data-testid="stFileUploadDropzone"] {
+        background-color: #1e293b !important;
+        border: 1px solid #334155 !important;
+    }
+    [data-testid="stFileUploadDropzone"] * {
+        color: #ffffff !important;
+    }
+    [data-testid="stFileUploadDropzone"] button {
+        background-color: #107c41 !important;
+        color: #ffffff !important;
+        border: none !important;
+        width: auto !important;
+    }
+
     /* Auth Page specific styling */
     .auth-header { background-color: #107c41; color: white !important; padding: 15px 20px; border-radius: 6px 6px 0 0; margin: -20px -20px 20px -20px; font-weight: bold; font-size: 1.2rem;}
     .spec-item { display: flex; align-items: flex-start; margin-bottom: 15px; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px;}
@@ -109,18 +123,12 @@ st.markdown("""
         box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
     }
     div[data-testid="stMetricLabel"] * { color: #64748b !important; font-family: 'JetBrains Mono', monospace !important; font-size: 0.75rem !important; text-transform: uppercase !important; font-weight: bold !important;}
-/* Fix File Uploader Visibility */
-    [data-testid="stFileUploadDropzone"] {
-        background-color: #1e293b !important;
-        border: 1px solid #334155 !important;
-    }
-    [data-testid="stFileUploadDropzone"] * {
-        color: #ffffff !important;
-    }
-    [data-testid="stFileUploadDropzone"] button {
-        background-color: #107c41 !important;
-        color: #ffffff !important;
-        border: none !important;
+    
+    /* Make Top Tabs Larger and Serif */
+    button[data-baseweb="tab"] {
+        font-family: 'Times New Roman', serif !important;
+        font-weight: bold !important;
+        font-size: 1.1rem !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -131,24 +139,27 @@ if 'logged_in' not in st.session_state:
 if 'username' not in st.session_state:
     st.session_state.username = ""
 
-# 4. Clean Sidebar Navigation
-with st.sidebar:
-    st.markdown("<h2 style='color: #107c41; font-weight: bold; margin-bottom: 0;'>EDA Engine Cloud</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='color: #64748b; font-size: 0.8rem; font-family: monospace; margin-top: 0;'>Streamlit Community Cloud</p><br>", unsafe_allow_html=True)
-    
-    if st.session_state.logged_in:
-        st.markdown(f"<div style='background: #f0fdf4; border: 1px solid #bbf7d0; padding: 10px; border-radius: 4px; margin-bottom: 20px;'><span style='color: #107c41; font-family: monospace; font-size: 0.8rem; font-weight: bold;'>USER: {st.session_state.username}</span></div>", unsafe_allow_html=True)
-        if st.button("Sign Out"):
-            st.session_state.logged_in = False
-            st.rerun()
-            
-    nav = st.radio("Navigate", ["Overview", "Authentication", "Cloud Lite App", "Windows App (Download)"], label_visibility="collapsed")
-    st.markdown("<br><hr><p style='color: #94a3b8; font-size: 0.75rem; font-family: monospace;'>NODE: DOCKER-CORE-V2.4<br>ENGINE: DUCKDB/POLARS</p>", unsafe_allow_html=True)
+# Header Info
+st.markdown("<h2 style='color: #107c41; font-weight: bold; margin-bottom: 0;'>EDA Engine Cloud</h2>", unsafe_allow_html=True)
+if st.session_state.logged_in:
+    st.markdown(f"<p style='color: #107c41; font-family: monospace; font-size: 0.85rem; font-weight: bold; margin-top: 5px;'>Active Session: {st.session_state.username}</p>", unsafe_allow_html=True)
+else:
+    st.markdown("<p style='color: #64748b; font-size: 0.85rem; font-family: monospace; margin-top: 5px;'>Streamlit Community Cloud • V3.2.0</p>", unsafe_allow_html=True)
+
+st.markdown("<br>", unsafe_allow_html=True)
+
+# 4. Top Navigation Tabs
+tab_overview, tab_auth, tab_lite, tab_download = st.tabs([
+    "🏠 Overview", 
+    "🔐 Authentication", 
+    "⚡ Cloud Lite App", 
+    "📥 Windows App (Download)"
+])
 
 # ==========================================
-# PAGE 1: OVERVIEW 
+# TAB 1: OVERVIEW 
 # ==========================================
-if nav == "Overview":
+with tab_overview:
     st.markdown("""
     <div class="top-status-bar">
         <span>● STREAMLIT CLOUD SANDBOX GATEWAY</span>
@@ -162,7 +173,7 @@ if nav == "Overview":
     col_btn1, col_btn2, col_btn3 = st.columns([1.5, 1, 1.5])
     with col_btn2:
         if st.button("Authenticate & Launch Sandbox"):
-            st.info("Navigate to 'Authentication' in the sidebar.")
+            st.info("Please click the '🔐 Authentication' tab above to log in.")
     
     st.markdown("<br><br>", unsafe_allow_html=True)
     
@@ -190,9 +201,9 @@ if nav == "Overview":
         """, unsafe_allow_html=True)
 
 # ==========================================
-# PAGE 2: AUTHENTICATION (Matching Image 3)
+# TAB 2: AUTHENTICATION
 # ==========================================
-elif nav == "Authentication":
+with tab_auth:
     st.markdown("""
     <div class="top-status-bar">
         <span>EDA Engine Cloud / Authentication Gateway / Node Provisioner</span>
@@ -202,6 +213,11 @@ elif nav == "Authentication":
     
     if st.session_state.logged_in:
         st.success("Authentication validated. Active session token generated.")
+        col_btn1, col_btn2, col_btn3 = st.columns([1, 1, 1])
+        with col_btn2:
+            if st.button("Sign Out of Session"):
+                st.session_state.logged_in = False
+                st.rerun()
     else:
         col1, col2 = st.columns([1.2, 1])
         
@@ -215,7 +231,6 @@ elif nav == "Authentication":
                 <p style="font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; font-weight: bold; color: #64748b !important; text-transform: uppercase; margin-bottom: 15px;">Federated Analyst Single Sign-On</p>
             """, unsafe_allow_html=True)
             
-            # Form Inputs
             email = st.text_input("Work Email / Institutional ID", placeholder="analyst@quant-research.org")
             token = st.text_input("Security Token / Master Key", type="password", placeholder="••••••••••••••••")
             
@@ -260,16 +275,14 @@ elif nav == "Authentication":
                 <div class="bypass-text">Need to process data larger than 5 MB? Download the standalone native client for zero cloud dependencies, unmetered multi-gigabyte RAM analysis, and local GPU acceleration.</div>
             </div>
             """, unsafe_allow_html=True)
-            
-            if st.button("Download Standalone Windows App ↓"):
-                st.info("Navigate to the Download tab in the sidebar.")
 
 # ==========================================
-# PAGE 3: CLOUD LITE APP (Matching Image 2)
+# TAB 3: CLOUD LITE APP
 # ==========================================
-elif nav == "Cloud Lite App":
+with tab_lite:
     if not st.session_state.logged_in:
         st.error("Access Denied: Authentication required to access the cloud sandbox.")
+        st.info("Navigate to the '🔐 Authentication' tab to sign in.")
     else:
         st.markdown("""
         <div class="top-status-bar">
@@ -375,9 +388,9 @@ elif nav == "Cloud Lite App":
                     st.error(f"Data parse failure. Error: {e}")
 
 # ==========================================
-# PAGE 4: DOWNLOAD APP
+# TAB 4: DOWNLOAD APP
 # ==========================================
-elif nav == "Windows App (Download)":
+with tab_download:
     st.markdown("""
     <div class="top-status-bar">
         <span>ISOLATION: SECURE • VERSION: V3.2.0 STABLE</span>
