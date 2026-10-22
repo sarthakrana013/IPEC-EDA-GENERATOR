@@ -486,5 +486,3 @@ with tab_download:
             file_name="EDA_Engine_V3_Installer.exe", 
             mime="application/octet-stream"
         )
-
-```
