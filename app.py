@@ -354,7 +354,7 @@ with tab_app:
                     
                     st.markdown("<hr>", unsafe_allow_html=True)
                     
-                    mod1, mod2, mod3 = st.tabs(["🗄️ Aggressive Auto-Clean", "📉 Visual Analytics", "🤖 True Cloud AI Assistant"])
+                    mod1, mod2, mod3, mod4 = st.tabs(["🗄️ Aggressive Auto-Clean", "📉 Visual Analytics", "🤖 True Cloud AI Assistant", "💾 Export Data"])
                     
                     with mod1:
                         st.markdown("### Dataset Architecture & Cleaning")
@@ -379,16 +379,6 @@ with tab_app:
                                     st.rerun()
                         else:
                             st.success("✅ Dataset has been aggressively cleaned. Zero missing values remain.")
-                            st.markdown("#### 💾 Export Processed Dataset")
-                            csv_data = df.to_csv(index=False).encode('utf-8')
-                            out_name = f"Cleaned_{st.session_state.last_filename.split('.')[0]}.csv"
-                            st.download_button(
-                                label="📥 Download Cleaned CSV",
-                                data=csv_data,
-                                file_name=out_name,
-                                mime="text/csv",
-                                use_container_width=True
-                            )
                     
                     with mod2:
                         st.markdown("### Visual Analytics Suite")
@@ -416,39 +406,54 @@ with tab_app:
                         st.markdown("### ☁️ True Online AI Data Assistant")
                         st.caption("Powered by Google Gemini API. Ask absolutely anything about your dataset.")
                         
-                        # API KEY INPUT BOX
-                        api_key = st.text_input("Enter your free Google Gemini API Key to wake up the AI:", type="password", help="Get a free key at aistudio.google.com")
-                        
-                        if api_key:
-                            try:
-                                import google.generativeai as genai
-                                genai.configure(api_key=api_key)
-                                # FIX: Switched to the universally supported 'gemini-pro' to prevent 404 errors
-                                model = genai.GenerativeModel('gemini-pro')
-                                
-                                for message in st.session_state.chat_history:
-                                    avatar_icon = "👤" if message["role"] == "user" else "🤖"
-                                    with st.chat_message(message["role"], avatar=avatar_icon):
-                                        st.markdown(message["content"])
+                        for message in st.session_state.chat_history:
+                            avatar_icon = "👤" if message["role"] == "user" else "🤖"
+                            with st.chat_message(message["role"], avatar=avatar_icon):
+                                st.markdown(message["content"])
 
-                                if prompt := st.chat_input("Ask the AI anything about your data..."):
-                                    st.chat_message("user", avatar="👤").markdown(prompt)
-                                    st.session_state.chat_history.append({"role": "user", "content": prompt})
-                                    
-                                    with st.chat_message("assistant", avatar="🤖"):
-                                        with st.spinner("AI is analyzing data..."):
-                                            context = f"You are a helpful Data Science AI. You are helping a user analyze a dataset. \nHere are the columns: {df.columns.tolist()} \nHere are the data types: {df.dtypes.to_dict()} \nHere is a preview of the first 3 rows: \n{df.head(3).to_string()} \n\nBased on this dataset context, please answer the user's question concisely: {prompt}"
-                                            
-                                            response = model.generate_content(context)
-                                            st.markdown(response.text)
-                                            st.session_state.chat_history.append({"role": "assistant", "content": response.text})
+                        if prompt := st.chat_input("Ask the AI anything about your data..."):
+                            st.chat_message("user", avatar="👤").markdown(prompt)
+                            st.session_state.chat_history.append({"role": "user", "content": prompt})
                             
-                            except ImportError:
-                                st.error("🚨 Missing Library! Please add `google-generativeai` to your requirements.txt file on GitHub.")
-                            except Exception as e:
-                                st.error(f"AI Engine Error: Invalid API Key or Connection Issue. Details: {e}")
+                            with st.chat_message("assistant", avatar="🤖"):
+                                with st.spinner("AI is analyzing data..."):
+                                    try:
+                                        # AUTOMATICALLY GRABS THE HIDDEN KEY FROM STREAMLIT SECRETS
+                                        api_key = st.secrets["GEMINI_API_KEY"]
+                                        
+                                        import google.generativeai as genai
+                                        genai.configure(api_key=api_key)
+                                        model = genai.GenerativeModel('gemini-pro')
+                                        
+                                        context = f"You are a helpful Data Science AI. You are helping a user analyze a dataset. \nHere are the columns: {df.columns.tolist()} \nHere are the data types: {df.dtypes.to_dict()} \nHere is a preview of the first 3 rows: \n{df.head(3).to_string()} \n\nBased on this dataset context, please answer the user's question concisely: {prompt}"
+                                        
+                                        response = model.generate_content(context)
+                                        st.markdown(response.text)
+                                        st.session_state.chat_history.append({"role": "assistant", "content": response.text})
+                        
+                                    except KeyError:
+                                        st.error("🚨 Configuration Error: GEMINI_API_KEY not found in Streamlit Secrets.")
+                                    except ImportError:
+                                        st.error("🚨 Missing Library! Please add `google-generativeai` to your requirements.txt file on GitHub.")
+                                    except Exception as e:
+                                        st.error(f"AI Engine Error: Connection Issue. Details: {e}")
+
+                    with mod4:
+                        st.markdown("### 💾 Export Processed Dataset")
+                        if not st.session_state.cleaned:
+                            st.error("🛑 STOP! You cannot export this file yet. The dataset still contains uncleaned data.")
+                            st.warning("👉 Go back to the '🗄️ Aggressive Auto-Clean' tab and click the clean button first.")
                         else:
-                            st.info("🔒 The AI brain is asleep. Paste your Google Gemini API Key in the box above to activate it.")
+                            st.success("✅ Dataset has been cleaned and is ready for export.")
+                            csv_data = df.to_csv(index=False).encode('utf-8')
+                            out_name = f"Cleaned_{st.session_state.last_filename.split('.')[0]}.csv"
+                            st.download_button(
+                                label="📥 Download Cleaned CSV",
+                                data=csv_data,
+                                file_name=out_name,
+                                mime="text/csv",
+                                use_container_width=True
+                            )
 
                 except Exception as e:
                     st.error(f"Data parse failure. Error: {e}")
