@@ -7,18 +7,18 @@ import time
 # 1. Page Configuration
 st.set_page_config(page_title="EDA Engine Cloud | Clean CSVs Fast", page_icon="✨", layout="wide")
 
-# 2. INJECTING MODERN SaaS UI/UX (DataSort Vibe)
+# 2. INJECTING MODERN SaaS UI/UX (DataSort Clone)
 st.markdown("""
 <style>
 #MainMenu {visibility: hidden;}
 footer {visibility: hidden;}
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
 
 /* Global Modern Font */
 html, body, p, h1, h2, h3, h4, h5, h6, label, li, b, strong, span, div { 
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
-    color: #1e293b !important;
+    color: #0f172a !important;
 }
 
 code, .stDataFrame, div[data-testid="stMetricValue"] {
@@ -49,34 +49,36 @@ code, .stDataFrame, div[data-testid="stMetricValue"] {
     background-color: #ffffff;
     border: 1px solid #e2e8f0;
     border-radius: 12px;
-    padding: 25px;
+    padding: 30px 25px;
     box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
     height: 100%;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 .custom-card:hover {
-    transform: translateY(-2px);
+    transform: translateY(-4px);
     box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
 }
-.card-icon { font-size: 2rem; margin-bottom: 15px; }
-.card-title { font-size: 1.1rem; font-weight: 600; color: #0f172a !important; margin-bottom: 10px;}
+.card-icon { font-size: 2.5rem; margin-bottom: 20px; }
+.card-title { font-size: 1.15rem; font-weight: 700; color: #0f172a !important; margin-bottom: 12px;}
 .card-text { font-size: 0.95rem; color: #475569 !important; line-height: 1.6; }
 
 /* Modern Primary Buttons */
 .stButton > button, [data-testid="stDownloadButton"] > button {
-    background-color: #2563eb !important; /* Modern SaaS Blue */
+    background-color: #2563eb !important; 
     color: #ffffff !important;
     border: none !important;
     border-radius: 8px !important;
     font-weight: 600 !important;
-    padding: 0.6rem 1.2rem !important;
+    padding: 0.75rem 1.5rem !important;
     width: 100%;
-    text-align: center;
+    font-size: 1.05rem !important;
     box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+    transition: all 0.2s ease;
 }
 .stButton > button:hover, [data-testid="stDownloadButton"] > button:hover { 
     background-color: #1d4ed8 !important; 
     box-shadow: 0 6px 8px -1px rgba(37, 99, 235, 0.3);
+    transform: translateY(-1px);
 }
 .stButton > button *, [data-testid="stDownloadButton"] > button * { color: #ffffff !important; }
 
@@ -89,19 +91,21 @@ input:not([type="file"]), textarea, [data-baseweb="input"], [data-baseweb="texta
 
 /* Massive, Inviting Drag & Drop Zone */
 [data-testid="stFileUploader"] section {
-    background-color: #f8fafc !important;
+    background-color: #ffffff !important;
     border: 2px dashed #cbd5e1 !important;
     border-radius: 12px !important;
-    padding: 40px 20px !important;
-    transition: border-color 0.2s ease;
+    padding: 50px 20px !important;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.02);
 }
 [data-testid="stFileUploader"] section:hover {
     border-color: #2563eb !important;
-    background-color: #eff6ff !important;
+    background-color: #f8fafc !important;
 }
-[data-testid="stFileUploader"] svg { fill: #94a3b8 !important; width: 40px; height: 40px; }
+[data-testid="stFileUploader"] svg { fill: #94a3b8 !important; width: 45px; height: 45px; margin-bottom: 10px;}
 [data-testid="stFileUploader"] div, [data-testid="stFileUploader"] span, [data-testid="stFileUploader"] small, [data-testid="stFileUploader"] p, [data-testid="stFileUploader"] label {
     color: #475569 !important;
+    font-size: 1rem !important;
 }
 
 /* FIX FOR DOUBLE OVERLAPPING TEXT: Hides native browser input text */
@@ -110,11 +114,11 @@ input:not([type="file"]), textarea, [data-baseweb="input"], [data-baseweb="texta
 }
 
 [data-testid="stUploadedFile"] { background-color: #eff6ff !important; border: 1px solid #bfdbfe !important; border-radius: 8px !important; }
-[data-testid="stUploadedFile"] * { color: #1e3a8a !important; }
+[data-testid="stUploadedFile"] * { color: #1e3a8a !important; font-weight: 500;}
 
 /* Chat UI */
 [data-testid="stChatMessage"] { background-color: #ffffff !important; border: 1px solid #e2e8f0 !important; border-radius: 8px !important; padding: 15px !important; box-shadow: 0 1px 2px rgba(0,0,0,0.02);}
-[data-testid="stChatMessage"] * { color: #1e293b !important; }
+[data-testid="stChatMessage"] * { color: #0f172a !important; }
 [data-testid="stChatInput"] { background-color: #ffffff !important; border: 1px solid #cbd5e1 !important; border-radius: 8px !important; }
 [data-testid="stChatInput"] textarea { background-color: #ffffff !important; color: #0f172a !important; }
 [data-testid="stChatInput"] button { background-color: #2563eb !important; border-radius: 6px !important; }
@@ -127,15 +131,16 @@ div[data-baseweb="tooltip"] > div { background-color: #1e293b !important; color:
 
 /* Metrics */
 div[data-testid="metric-container"] { background-color: #ffffff !important; border: 1px solid #e2e8f0 !important; border-radius: 12px !important; padding: 20px !important; box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important; }
-div[data-testid="stMetricLabel"] * { color: #64748b !important; font-family: 'Inter', sans-serif !important; font-size: 0.8rem !important; font-weight: 500 !important; text-transform: uppercase; letter-spacing: 0.05em;}
-div[data-testid="stMetricValue"] { font-size: 1.8rem !important; font-weight: 700 !important; color: #0f172a !important; font-family: 'Inter', sans-serif !important;}
+div[data-testid="stMetricLabel"] * { color: #64748b !important; font-family: 'Inter', sans-serif !important; font-size: 0.8rem !important; font-weight: 600 !important; text-transform: uppercase; letter-spacing: 0.05em;}
+div[data-testid="stMetricValue"] { font-size: 1.8rem !important; font-weight: 800 !important; color: #0f172a !important; font-family: 'Inter', sans-serif !important;}
 
 button[data-baseweb="tab"] { font-family: 'Inter', sans-serif !important; font-weight: 600 !important; font-size: 1rem !important; }
 [data-testid="stCheckbox"] label span { color: #475569 !important; font-size: 0.9rem !important; }
 
-/* Hero Section */
-.hero-title { font-size: 3.5rem; font-weight: 800; color: #0f172a !important; text-align: center; margin-top: 40px; margin-bottom: 15px; letter-spacing: -0.02em; line-height: 1.2;}
-.hero-subtitle { font-size: 1.25rem; color: #475569 !important; text-align: center; margin-bottom: 50px; font-weight: 400; max-width: 600px; margin-left: auto; margin-right: auto;}
+/* DataSort Hero Section Style */
+.hero-container { padding: 40px 0 60px 0; text-align: center; }
+.hero-title { font-size: 4rem; font-weight: 800; color: #0f172a !important; text-align: center; margin-bottom: 20px; letter-spacing: -0.03em; line-height: 1.1;}
+.hero-subtitle { font-size: 1.25rem; color: #475569 !important; text-align: center; margin-bottom: 40px; font-weight: 400; max-width: 650px; margin-left: auto; margin-right: auto; line-height: 1.6;}
 .highlight-text { color: #2563eb !important; }
 </style>
 """, unsafe_allow_html=True)
@@ -153,41 +158,44 @@ if 'chat_history' not in st.session_state:
 if 'last_filename' not in st.session_state:
     st.session_state.last_filename = "Dataset"
 
-st.markdown("<div style='font-size: 1.2rem; font-weight: 700; color: #0f172a; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;'>✨ DataSort Cloud</div>", unsafe_allow_html=True)
+st.markdown("<div style='font-size: 1.4rem; font-weight: 800; color: #0f172a; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; letter-spacing: -0.02em;'>✨ DataSort Cloud</div>", unsafe_allow_html=True)
 
 tab_overview, tab_auth, tab_app, tab_download = st.tabs([
     "🏠 Home", 
     "🔐 Login", 
-    "⚡ Clean CSV (App)", 
+    "⚡ Clean CSV", 
     "📥 Desktop App"
 ])
 
 # ==========================================
-# TAB 1: OVERVIEW (SaaS Landing Page)
+# TAB 1: OVERVIEW (DataSort SaaS Landing Page)
 # ==========================================
 with tab_overview:
     st.markdown("""
-<div class="hero-title">Clean Messy CSV Files <br><span class="highlight-text">Instantly & Securely.</span></div>
-<div class="hero-subtitle">Transform raw, dirty datasets into ML-ready matrices in seconds. 100% free, automated, and private.</div>
+<div class="hero-container">
+    <div class="hero-title">Clean Messy CSV Files <span class="highlight-text">Free.</span></div>
+    <div class="hero-subtitle">The fastest, most secure way to transform raw datasets into ML-ready matrices. Instantly format, impute, and export—no coding required.</div>
+</div>
 """, unsafe_allow_html=True)
     
-    # FIX: Tighter column ratio perfectly centers the button
     col_btn1, col_btn2, col_btn3 = st.columns([3, 2, 3])
     with col_btn2:
         if st.button("Start Cleaning for Free", use_container_width=True):
             st.info("Please click the '🔐 Login' tab above to authenticate your session.")
     
+    st.markdown("<div style='text-align: center; color: #94a3b8; font-size: 0.85rem; margin-top: 15px;'>100% Free • Secure Local Processing • No Credit Card Required</div>", unsafe_allow_html=True)
+    
     st.markdown("<br><br><br>", unsafe_allow_html=True)
     
-    st.markdown("<h3 style='text-align: center; font-weight: 700; margin-bottom: 30px;'>How it works</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 style='text-align: center; font-weight: 800; font-size: 2rem; margin-bottom: 40px; letter-spacing: -0.02em;'>How it works</h3>", unsafe_allow_html=True)
     
     c1, c2, c3 = st.columns(3)
     with c1:
         st.markdown("""
 <div class="custom-card" style="text-align: center;">
     <div class="card-icon">📤</div>
-    <div class="card-title">1. Upload your messy file</div>
-    <div class="card-text">Drag and drop your CSV, Excel, or JSON file into our secure, ephemeral cloud sandbox.</div>
+    <div class="card-title">1. Upload your file</div>
+    <div class="card-text">Drag and drop your messy CSV, Excel, or JSON directly into our secure, ephemeral sandbox.</div>
 </div>
 """, unsafe_allow_html=True)
     with c2:
@@ -195,15 +203,15 @@ with tab_overview:
 <div class="custom-card" style="text-align: center;">
     <div class="card-icon">⚡</div>
     <div class="card-title">2. Aggressive Auto-Clean</div>
-    <div class="card-text">Our engine automatically strips invalid characters, fixes data types, and imputes missing values.</div>
+    <div class="card-text">We automatically strip invalid characters, coerce schemas, and statistically impute blanks.</div>
 </div>
 """, unsafe_allow_html=True)
     with c3:
         st.markdown("""
 <div class="custom-card" style="text-align: center;">
     <div class="card-icon">📥</div>
-    <div class="card-title">3. Export & Analyze</div>
-    <div class="card-text">Download your pristine dataset instantly, or chat with it using our offline NLP engine.</div>
+    <div class="card-title">3. Export & Chat</div>
+    <div class="card-text">Download your perfect dataset instantly, or analyze it using our built-in offline NLP engine.</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -294,8 +302,8 @@ with tab_app:
     else:
         st.markdown("""
 <div style="text-align: center; margin-bottom: 30px;">
-    <h2 style="font-weight: 700; color: #0f172a; margin-bottom: 10px;">Upload your messy dataset</h2>
-    <p style="color: #64748b; font-size: 1rem;">Supports CSV, Excel, JSON, and Parquet up to 5.0 MB.</p>
+    <h2 style="font-weight: 700; color: #0f172a; margin-bottom: 10px; font-size: 2.2rem; letter-spacing: -0.02em;">Upload your messy dataset</h2>
+    <p style="color: #64748b; font-size: 1.1rem;">Supports CSV, Excel, JSON, and Parquet up to 5.0 MB.</p>
 </div>
 """, unsafe_allow_html=True)
         
@@ -338,7 +346,7 @@ with tab_app:
                     mod1, mod2, mod3, mod4 = st.tabs(["✨ Auto-Clean", "📊 Visuals", "💬 AI Chat", "💾 Download"])
                     
                     with mod1:
-                        st.markdown("<h3 style='font-size: 1.2rem; font-weight: 600; margin-bottom: 15px;'>Dataset Preview</h3>", unsafe_allow_html=True)
+                        st.markdown("<h3 style='font-size: 1.2rem; font-weight: 700; margin-bottom: 15px;'>Dataset Preview</h3>", unsafe_allow_html=True)
                         st.dataframe(df.head(), use_container_width=True)
                         
                         if not st.session_state.cleaned:
@@ -371,7 +379,7 @@ with tab_app:
                             st.success("✅ Dataset has been aggressively cleaned. Zero missing values remain.")
                     
                     with mod2:
-                        st.markdown("<h3 style='font-size: 1.2rem; font-weight: 600; margin-bottom: 15px;'>Visual Analytics</h3>", unsafe_allow_html=True)
+                        st.markdown("<h3 style='font-size: 1.2rem; font-weight: 700; margin-bottom: 15px;'>Visual Analytics</h3>", unsafe_allow_html=True)
                         numeric_cols_viz = df.select_dtypes(include=[np.number]).columns.tolist()
                         
                         if len(numeric_cols_viz) > 0:
@@ -393,7 +401,7 @@ with tab_app:
                             st.info("No numerical columns available for visualizations.")
                             
                     with mod3:
-                        st.markdown("<h3 style='font-size: 1.2rem; font-weight: 600; margin-bottom: 5px;'>Deterministic NLP Chat</h3>", unsafe_allow_html=True)
+                        st.markdown("<h3 style='font-size: 1.2rem; font-weight: 700; margin-bottom: 5px;'>Deterministic NLP Chat</h3>", unsafe_allow_html=True)
                         st.caption("Ask questions about specific columns. Try: 'What is the average of [column]?'")
                         
                         for message in st.session_state.chat_history:
@@ -447,7 +455,7 @@ with tab_app:
                                     st.session_state.chat_history.append({"role": "assistant", "type": "dataframe", "content": response_df})
 
                     with mod4:
-                        st.markdown("<h3 style='font-size: 1.2rem; font-weight: 600; margin-bottom: 15px;'>Export Cleaned Data</h3>", unsafe_allow_html=True)
+                        st.markdown("<h3 style='font-size: 1.2rem; font-weight: 700; margin-bottom: 15px;'>Export Cleaned Data</h3>", unsafe_allow_html=True)
                         if not st.session_state.cleaned:
                             st.error("🛑 The dataset still contains uncleaned data.")
                             st.warning("👉 Go to the '✨ Auto-Clean' tab and clean the file first.")
@@ -477,7 +485,7 @@ with tab_download:
     <span>100% AIR-GAPPED</span>
 </div>
 """, unsafe_allow_html=True)
-    st.markdown("<h2 style='color: #0f172a !important; font-weight: 800; text-align: center; margin-top: 40px;'>Get the Desktop App</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='color: #0f172a !important; font-weight: 800; text-align: center; margin-top: 40px; font-size: 2.5rem; letter-spacing: -0.02em;'>Get the Desktop App</h2>", unsafe_allow_html=True)
     st.markdown("<p style='color: #475569 !important; text-align: center; font-size: 1.1rem; margin-bottom: 40px;'>Unrestricted, unlimited data usage running locally on your hardware.</p>", unsafe_allow_html=True)
     
     col1, col2, col3 = st.columns([1, 2, 1])
