@@ -7,7 +7,7 @@ import time
 # 1. Page Configuration
 st.set_page_config(page_title="DataSort Cloud | Clean CSVs Fast", page_icon="✨", layout="wide")
 
-# 2. NUCLEAR SAAS CSS INJECTION
+# 2. NUCLEAR SAAS CSS INJECTION (EXCEL GREEN THEME)
 st.markdown("""
 <style>
 #MainMenu {visibility: hidden;}
@@ -34,7 +34,7 @@ html, body, p, h1, h2, h3, h4, h5, h6, label, li, span, div {
     height: 48px !important;
     background-color: #ffffff !important;
     border: 2px solid #e2e8f0 !important;
-    border-radius: 30px !important; /* Creates the Pill Shape */
+    border-radius: 30px !important; 
     padding: 0 24px !important;
     color: #64748b !important;
     font-weight: 700 !important;
@@ -47,10 +47,10 @@ html, body, p, h1, h2, h3, h4, h5, h6, label, li, span, div {
     color: #0f172a !important;
 }
 .stTabs [data-baseweb="tab"][aria-selected="true"] {
-    background-color: #2563eb !important; /* Hardcoded Blue */
-    border-color: #2563eb !important;
+    background-color: #107c41 !important; /* EXCEL GREEN */
+    border-color: #107c41 !important;
     color: #ffffff !important;
-    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3) !important;
+    box-shadow: 0 4px 10px rgba(16, 124, 65, 0.3) !important;
 }
 .stTabs [data-baseweb="tab"][aria-selected="true"] * {
     color: #ffffff !important;
@@ -65,11 +65,11 @@ html, body, p, h1, h2, h3, h4, h5, h6, label, li, span, div {
 /* ========================================================= */
 
 /* ========================================================= */
-/* 🚨 NUCLEAR BUTTON OVERRIDE - FORCES BLUE OVER GREEN       */
+/* 🚨 NUCLEAR BUTTON OVERRIDE                                */
 /* ========================================================= */
 div[data-testid="stButton"] > button, 
 div[data-testid="stDownloadButton"] > button {
-    background-color: #2563eb !important; 
+    background-color: #107c41 !important; /* EXCEL GREEN */
     color: #ffffff !important;
     border: none !important;
     border-radius: 8px !important;
@@ -77,13 +77,13 @@ div[data-testid="stDownloadButton"] > button {
     padding: 0.75rem 1.5rem !important;
     width: 100%;
     font-size: 1.05rem !important;
-    box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2) !important;
+    box-shadow: 0 4px 6px -1px rgba(16, 124, 65, 0.2) !important;
     transition: all 0.2s ease !important;
 }
 div[data-testid="stButton"] > button:hover, 
 div[data-testid="stDownloadButton"] > button:hover { 
-    background-color: #1d4ed8 !important; 
-    box-shadow: 0 6px 12px rgba(37, 99, 235, 0.3) !important;
+    background-color: #0b5c2f !important; /* DARKER GREEN */
+    box-shadow: 0 6px 12px rgba(16, 124, 65, 0.3) !important;
     transform: translateY(-2px) !important;
 }
 div[data-testid="stButton"] > button *, 
@@ -101,9 +101,22 @@ div[data-testid="stDownloadButton"] > button * {
     transition: all 0.2s ease;
     box-shadow: 0 1px 2px rgba(0,0,0,0.02);
 }
-[data-testid="stFileUploader"] section:hover { border-color: #2563eb !important; background-color: #eff6ff !important; }
+[data-testid="stFileUploader"] section:hover { border-color: #107c41 !important; background-color: #f0fdf4 !important; }
 [data-testid="stFileUploader"] svg { fill: #94a3b8 !important; width: 45px; height: 45px; margin-bottom: 10px;}
 [data-testid="stFileUploader"] input[type="file"] { color: transparent !important; }
+
+/* Overwrite Native 200MB text with Custom 5MB text */
+[data-testid="stFileUploader"] small {
+    visibility: hidden;
+}
+[data-testid="stFileUploader"] small::before {
+    content: "Max file size: 5.0 MB";
+    visibility: visible;
+    display: block;
+    color: #64748b;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
 
 /* Custom Cards */
 .custom-card { background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 30px 25px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); height: 100%; transition: transform 0.2s ease;}
@@ -116,7 +129,7 @@ div[data-testid="stDownloadButton"] > button * {
 .hero-container { padding: 40px 0 60px 0; text-align: center; }
 .hero-title { font-size: 4.5rem; font-weight: 900; color: #0f172a !important; text-align: center; margin-bottom: 20px; letter-spacing: -0.04em; line-height: 1.1;}
 .hero-subtitle { font-size: 1.25rem; color: #475569 !important; text-align: center; margin-bottom: 40px; font-weight: 400; max-width: 650px; margin-left: auto; margin-right: auto; line-height: 1.6;}
-.highlight-text { color: #2563eb !important; }
+.highlight-text { color: #107c41 !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -140,7 +153,7 @@ st.markdown("<br>", unsafe_allow_html=True)
 tab_overview, tab_auth, tab_app, tab_download = st.tabs([
     "🏠 Home", 
     "🔐 Login", 
-    "⚡ Clean CSV", 
+    "⚡ Clean CSV (Max 5MB)", 
     "📥 Desktop App"
 ])
 
@@ -224,14 +237,13 @@ with tab_auth:
             st.markdown("""
                 <div style='display: flex; justify-content: space-between; align-items: center; margin-top: 20px; margin-bottom: 8px;'>
                     <span style='font-size: 0.95rem; color: #0f172a !important; font-weight: 600;'>Password</span>
-                    <a href='#' style='color: #2563eb; font-size: 0.85rem; font-weight: 500; text-decoration: none;'>Forgot password?</a>
+                    <a href='#' style='color: #107c41; font-size: 0.85rem; font-weight: 500; text-decoration: none;'>Forgot password?</a>
                 </div>
             """, unsafe_allow_html=True)
             token = st.text_input("Password", type="password", label_visibility="collapsed")
             
             st.markdown("<br>", unsafe_allow_html=True)
             
-            # The CSS above strictly forces this button to be Blue #2563eb
             if st.button("Sign in", use_container_width=True):
                 st.session_state.logged_in = True
                 st.session_state.username = "telemetry-inst-01"
@@ -335,17 +347,17 @@ with tab_app:
                         if len(numeric_cols_viz) > 0:
                             chart_type = st.radio("Select Analysis Type:", ["Correlation Matrix", "Feature Distribution", "Scatter Plot"], horizontal=True)
                             if chart_type == "Correlation Matrix" and len(numeric_cols_viz) >= 2:
-                                custom_colors = [[0.0, '#eff6ff'], [1.0, '#2563eb']] 
+                                custom_colors = [[0.0, '#eff6ff'], [1.0, '#107c41']] 
                                 fig = px.imshow(df[numeric_cols_viz].corr(), text_auto=".2f", color_continuous_scale=custom_colors, aspect="auto")
                                 st.plotly_chart(fig, use_container_width=True)
                             elif chart_type == "Feature Distribution" and numeric_cols_viz:
                                 selected_col = st.selectbox("Select Feature:", numeric_cols_viz)
-                                fig = px.histogram(df, x=selected_col, color_discrete_sequence=['#2563eb'])
+                                fig = px.histogram(df, x=selected_col, color_discrete_sequence=['#107c41'])
                                 st.plotly_chart(fig, use_container_width=True)
                             elif chart_type == "Scatter Plot" and len(numeric_cols_viz) >= 2:
                                 col_x = st.selectbox("X-Axis:", numeric_cols_viz, index=0)
                                 col_y = st.selectbox("Y-Axis:", numeric_cols_viz, index=1 if len(numeric_cols_viz)>1 else 0)
-                                fig = px.scatter(df, x=col_x, y=col_y, color_discrete_sequence=['#2563eb'])
+                                fig = px.scatter(df, x=col_x, y=col_y, color_discrete_sequence=['#107c41'])
                                 st.plotly_chart(fig, use_container_width=True)
                         else:
                             st.info("No numerical columns available for visualizations.")
