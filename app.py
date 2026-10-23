@@ -13,7 +13,7 @@ st.markdown("""
 #MainMenu {visibility: hidden;}
 footer {visibility: hidden;}
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap');
 
 /* Global Modern Font - REMOVED div and span to prevent breaking dataframe menus */
 html, body, p, h1, h2, h3, h4, h5, h6, label, li, b, strong { 
@@ -130,13 +130,13 @@ div[data-testid="stMetricLabel"] * { color: #64748b !important; font-family: 'In
 div[data-testid="stMetricValue"] { font-size: 1.8rem !important; font-weight: 800 !important; color: #0f172a !important; font-family: 'Inter', sans-serif !important;}
 
 /* ========================================================= */
-/* PREMIUM SAAS TABS OVERRIDE                                */
+/* PREMIUM SAAS TABS OVERRIDE - FORCE APPLY                  */
 /* ========================================================= */
-div[data-baseweb="tab-list"] {
+[data-testid="stTabs"] div[data-baseweb="tab-list"] {
     gap: 12px;
-    margin-bottom: 20px;
+    margin-bottom: 25px;
 }
-button[data-baseweb="tab"] {
+[data-testid="stTabs"] button[data-baseweb="tab"] {
     font-family: 'Inter', sans-serif !important;
     font-weight: 600 !important;
     font-size: 0.95rem !important;
@@ -149,22 +149,22 @@ button[data-baseweb="tab"] {
     transition: all 0.2s ease !important;
     margin: 0 !important;
 }
-button[data-baseweb="tab"]:hover {
+[data-testid="stTabs"] button[data-baseweb="tab"]:hover {
     background-color: #f8fafc !important;
     border-color: #cbd5e1 !important;
     color: #0f172a !important;
     transform: translateY(-1px);
 }
-button[data-baseweb="tab"][aria-selected="true"] {
+[data-testid="stTabs"] button[data-baseweb="tab"][aria-selected="true"] {
     background-color: #2563eb !important;
     border-color: #2563eb !important;
     color: #ffffff !important;
     box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2) !important;
 }
-button[data-baseweb="tab"][aria-selected="true"] * {
+[data-testid="stTabs"] button[data-baseweb="tab"][aria-selected="true"] * {
     color: #ffffff !important;
 }
-div[data-baseweb="tab-highlight"] {
+[data-testid="stTabs"] div[data-baseweb="tab-highlight"] {
     display: none !important;
 }
 /* ========================================================= */
@@ -173,7 +173,7 @@ div[data-baseweb="tab-highlight"] {
 
 /* Hero Section */
 .hero-container { padding: 40px 0 60px 0; text-align: center; }
-.hero-title { font-size: 4rem; font-weight: 800; color: #0f172a !important; text-align: center; margin-bottom: 20px; letter-spacing: -0.03em; line-height: 1.1;}
+.hero-title { font-size: 4rem; font-weight: 900; color: #0f172a !important; text-align: center; margin-bottom: 20px; letter-spacing: -0.04em; line-height: 1.1;}
 .hero-subtitle { font-size: 1.25rem; color: #475569 !important; text-align: center; margin-bottom: 40px; font-weight: 400; max-width: 650px; margin-left: auto; margin-right: auto; line-height: 1.6;}
 .highlight-text { color: #2563eb !important; }
 </style>
@@ -192,7 +192,9 @@ if 'chat_history' not in st.session_state:
 if 'last_filename' not in st.session_state:
     st.session_state.last_filename = "Dataset"
 
-st.markdown("<div style='font-size: 1.4rem; font-weight: 800; color: #0f172a; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; letter-spacing: -0.02em;'>✨ DataSort Cloud</div>", unsafe_allow_html=True)
+# MASSIVE, ULTRA-BOLD TITLE
+st.markdown("<h1 style='font-size: 2.8rem; font-weight: 900; color: #0f172a; padding: 15px 0; margin: 0; display: flex; align-items: center; gap: 12px; letter-spacing: -0.04em;'>✨ DataSort Cloud</h1>", unsafe_allow_html=True)
+st.markdown("<br>", unsafe_allow_html=True)
 
 tab_overview, tab_auth, tab_app, tab_download = st.tabs([
     "🏠 Home", 
