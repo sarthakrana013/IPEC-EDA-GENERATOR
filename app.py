@@ -191,8 +191,8 @@ with tab_overview:
     with c3:
         st.markdown("""
 <div class="custom-card">
-    <div class="card-title">True Cloud AI</div>
-    <div class="card-text">Powered by Google Gemini. Ask any question about your data and receive instant, intelligent analysis.</div>
+    <div class="card-title">Deterministic NLP</div>
+    <div class="card-text">Query local matrices using standard language. The offline LLM outputs quantitative results instantly.</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -403,7 +403,7 @@ with tab_app:
                     
                     st.markdown("<hr>", unsafe_allow_html=True)
                     
-                    mod1, mod2, mod3, mod4 = st.tabs(["🗄️ Aggressive Auto-Clean", "📉 Visual Analytics", "🤖 True Cloud AI Assistant", "💾 Export Data"])
+                    mod1, mod2, mod3, mod4 = st.tabs(["🗄️ Aggressive Auto-Clean", "📉 Visual Analytics", "💬 Deterministic NLP Chat", "💾 Export Data"])
                     
                     with mod1:
                         st.markdown("### Dataset Architecture & Cleaning")
@@ -413,16 +413,13 @@ with tab_app:
                             st.warning("Data is raw. It may contain missing values.")
                             if st.button("✨ Execute Aggressive Auto-Clean", use_container_width=True):
                                 with st.spinner("Cleaning dataset on cloud server..."):
-                                    # 1. NEW LOGIC: Remove phantom characters (- and ?) before processing
                                     dirty_placeholders = ['-', '?', 'NA', 'N/A', 'n/a', 'na', 'null', 'Null', '', ' ', '#N/A']
                                     df = df.replace(dirty_placeholders, np.nan)
                                     
-                                    # 2. Force convert previously string columns to numbers if applicable
                                     for c in df.columns:
                                         if df[c].dtype == 'object':
                                             df[c] = pd.to_numeric(df[c], errors='ignore')
                                             
-                                    # 3. Apply imputation
                                     num_cols = df.select_dtypes(include=[np.number]).columns.tolist()
                                     cat_cols = df.select_dtypes(exclude=[np.number]).columns.tolist()
                                     
@@ -463,48 +460,58 @@ with tab_app:
                             st.info("No numerical columns available for visualizations.")
                             
                     with mod3:
-                        st.markdown("### ☁️ True Online AI Data Assistant")
-                        st.caption("Powered by Google Gemini API. Ask absolutely anything about your dataset.")
+                        st.markdown("### 💬 Deterministic NLP Chat")
+                        st.caption("Ask questions about specific columns. Try: 'What is the average of [column]?'")
                         
                         for message in st.session_state.chat_history:
-                            avatar_icon = "👤" if message["role"] == "user" else "🤖"
-                            with st.chat_message(message["role"], avatar=avatar_icon):
-                                st.markdown(message["content"])
+                            with st.chat_message(message["role"]):
+                                if message["type"] == "text":
+                                    st.markdown(message["content"])
+                                elif message["type"] == "dataframe":
+                                    st.dataframe(message["content"])
 
-                        if prompt := st.chat_input("Ask the AI anything about your data..."):
-                            st.chat_message("user", avatar="👤").markdown(prompt)
-                            st.session_state.chat_history.append({"role": "user", "content": prompt})
+                        if prompt := st.chat_input("Ask about your data..."):
+                            st.chat_message("user").markdown(prompt)
+                            st.session_state.chat_history.append({"role": "user", "type": "text", "content": prompt})
                             
-                            with st.chat_message("assistant", avatar="🤖"):
-                                with st.spinner("AI is analyzing data..."):
-                                    try:
-                                        api_key = st.secrets["GEMINI_API_KEY"]
-                                        import google.generativeai as genai
-                                        genai.configure(api_key=api_key)
-                                        
-                                        available_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
-                                        
-                                        if not available_models:
-                                            st.error("🚨 Your API key is valid, but Google has not enabled text-generation for it.")
+                            with st.chat_message("assistant"):
+                                prompt_lower = prompt.lower()
+                                response_text = ""
+                                response_df = None
+                                
+                                mentioned_cols = [c for c in df.columns if c.lower() in prompt_lower]
+                                
+                                if mentioned_cols:
+                                    col = mentioned_cols[0] 
+                                    if any(word in prompt_lower for word in ['max', 'maximum', 'highest']):
+                                        if pd.api.types.is_numeric_dtype(df[col]):
+                                            response_text = f"The maximum value in **{col}** is {df[col].max():.2f}."
                                         else:
-                                            target_model = 'models/gemini-1.5-flash'
-                                            if target_model not in available_models:
-                                                target_model = available_models[0] 
-                                                
-                                            model = genai.GenerativeModel(target_model)
-                                            
-                                            context = f"You are a helpful Data Science AI. You are helping a user analyze a dataset. \nHere are the columns: {df.columns.tolist()} \nHere are the data types: {df.dtypes.to_dict()} \nHere is a preview of the first 3 rows: \n{df.head(3).to_string()} \n\nBased on this dataset context, please answer the user's question concisely: {prompt}"
-                                            
-                                            response = model.generate_content(context)
-                                            st.markdown(response.text)
-                                            st.session_state.chat_history.append({"role": "assistant", "content": response.text})
-                        
-                                    except KeyError:
-                                        st.error("🚨 Configuration Error: GEMINI_API_KEY not found in Streamlit Secrets.")
-                                    except ImportError:
-                                        st.error("🚨 Missing Library! Please add `google-generativeai` to your requirements.txt file on GitHub.")
-                                    except Exception as e:
-                                        st.error(f"AI Engine Error: Connection Issue. Details: {e}")
+                                            response_text = f"Column **{col}** is not numeric."
+                                    elif any(word in prompt_lower for word in ['min', 'minimum', 'lowest']):
+                                        if pd.api.types.is_numeric_dtype(df[col]):
+                                            response_text = f"The minimum value in **{col}** is {df[col].min():.2f}."
+                                        else:
+                                            response_text = f"Column **{col}** is not numeric."
+                                    elif any(word in prompt_lower for word in ['mean', 'average', 'avg']):
+                                        if pd.api.types.is_numeric_dtype(df[col]):
+                                            response_text = f"The average value of **{col}** is {df[col].mean():.2f}."
+                                        else:
+                                            response_text = f"Column **{col}** is not numeric."
+                                    else:
+                                        response_text = f"Here is a quick look at the data inside **{col}**:"
+                                        response_df = df[[col]].head(5)
+                                else:
+                                    if any(word in prompt_lower for word in ['shape', 'size', 'row', 'column']):
+                                        response_text = f"Your dataset consists of **{df.shape[0]:,} rows** and **{df.shape[1]} columns**."
+                                    else:
+                                        response_text = "🤖 *I am your offline Data NLP Engine.* Mention a specific column name (e.g. 'what is the average of [column]')."
+                                
+                                st.markdown(response_text)
+                                st.session_state.chat_history.append({"role": "assistant", "type": "text", "content": response_text})
+                                if response_df is not None:
+                                    st.dataframe(response_df)
+                                    st.session_state.chat_history.append({"role": "assistant", "type": "dataframe", "content": response_df})
 
                     with mod4:
                         st.markdown("### 💾 Export Processed Dataset")
