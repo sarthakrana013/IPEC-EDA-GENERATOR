@@ -420,4 +420,77 @@ with tab_app:
                                         else:
                                             response_text = f"Column **{col}** is not numeric."
                                     elif any(word in prompt_lower for word in ['mean', 'average', 'avg']):
-                                        if
+                                        if pd.api.types.is_numeric_dtype(df[col]):
+                                            response_text = f"The average value of **{col}** is {df[col].mean():.2f}."
+                                        else:
+                                            response_text = f"Column **{col}** is not numeric."
+                                    else:
+                                        response_text = f"Here is a quick look at the data inside **{col}**:"
+                                        response_df = df[[col]].head(5)
+                                else:
+                                    if any(word in prompt_lower for word in ['shape', 'size', 'row', 'column']):
+                                        response_text = f"Your dataset consists of **{df.shape[0]:,} rows** and **{df.shape[1]} columns**."
+                                    else:
+                                        response_text = "🤖 *I am your offline Data NLP Engine.* Mention a specific column name (e.g. 'what is the average of [column]')."
+                                
+                                st.markdown(response_text)
+                                st.session_state.chat_history.append({"role": "assistant", "type": "text", "content": response_text})
+                                if response_df is not None:
+                                    st.dataframe(response_df)
+                                    st.session_state.chat_history.append({"role": "assistant", "type": "dataframe", "content": response_df})
+
+                    with mod4:
+                        st.markdown("<h3 style='font-size: 1.2rem; font-weight: 600; margin-bottom: 15px;'>Export Cleaned Data</h3>", unsafe_allow_html=True)
+                        if not st.session_state.cleaned:
+                            st.error("🛑 The dataset still contains uncleaned data.")
+                            st.warning("👉 Go to the '✨ Auto-Clean' tab and clean the file first.")
+                        else:
+                            st.success("✅ Dataset is fully processed and ready for download.")
+                            csv_data = df.to_csv(index=False).encode('utf-8')
+                            out_name = f"Cleaned_{st.session_state.last_filename.split('.')[0]}.csv"
+                            
+                            st.download_button(
+                                label="📥 Download Cleaned CSV",
+                                data=csv_data,
+                                file_name=out_name,
+                                mime="text/csv",
+                                use_container_width=True
+                            )
+
+                except Exception as e:
+                    st.error(f"Data parse failure. Error: {e}")
+
+# ==========================================
+# TAB 4: DOWNLOAD APP
+# ==========================================
+with tab_download:
+    st.markdown("""
+<div class="top-status-bar">
+    <span>ISOLATION: SECURE • VERSION: V3.2.0 STABLE</span>
+    <span>100% AIR-GAPPED</span>
+</div>
+""", unsafe_allow_html=True)
+    st.markdown("<h2 style='color: #0f172a !important; font-weight: 800; text-align: center; margin-top: 40px;'>Get the Desktop App</h2>", unsafe_allow_html=True)
+    st.markdown("<p style='color: #475569 !important; text-align: center; font-size: 1.1rem; margin-bottom: 40px;'>Unrestricted, unlimited data usage running locally on your hardware.</p>", unsafe_allow_html=True)
+    
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        st.markdown("""
+<div class="custom-card" style="margin-bottom: 30px;">
+    <div class="card-title">Runtime Capability Matrix</div>
+    <ul style="color: #475569 !important; font-size: 0.95rem; line-height: 1.8; padding-left: 20px;">
+        <li><strong>OS Requirement:</strong> Windows 10/11 (64-bit)</li>
+        <li><strong>File Size Quota:</strong> UNLIMITED (Hardware Bound)</li>
+        <li><strong>Data Privacy:</strong> 100% AIR-GAPPED</li>
+        <li><strong>Compute Architecture:</strong> AVX-512 / CUDA Support</li>
+    </ul>
+</div>
+""", unsafe_allow_html=True)
+        
+        dummy_exe_bytes = b"Executable build payload placeholder"
+        st.download_button(
+            label="Download for Windows (.exe)", 
+            data=dummy_exe_bytes, 
+            file_name="EDA_Engine_V3_Installer.exe", 
+            mime="application/octet-stream"
+        )
