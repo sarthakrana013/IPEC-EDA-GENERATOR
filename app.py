@@ -512,7 +512,7 @@ with tab_app:
                     st.error(f"Data parse failure. Error: {e}")
 
 # ==========================================
-# TAB 4: DOWNLOAD APP
+# TAB 4: DOWNLOAD APP (Dynamic Zip Generator)
 # ==========================================
 with tab_download:
     st.markdown("""
@@ -521,8 +521,8 @@ with tab_download:
     <span>100% AIR-GAPPED</span>
 </div>
 """, unsafe_allow_html=True)
-    st.markdown("<h2 style='color: #0f172a !important; font-weight: 800; text-align: center; margin-top: 40px; font-size: 2.5rem; letter-spacing: -0.02em;'>Get the Desktop App</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='color: #475569 !important; text-align: center; font-size: 1.1rem; margin-bottom: 40px;'>Unrestricted, unlimited data usage running locally on your hardware.</p>", unsafe_allow_html=True)
+    st.markdown("<h2 style='color: #0f172a !important; font-weight: 800; text-align: center; margin-top: 40px; font-size: 2.5rem; letter-spacing: -0.02em;'>Get the Local Engine</h2>", unsafe_allow_html=True)
+    st.markdown("<p style='color: #475569 !important; text-align: center; font-size: 1.1rem; margin-bottom: 40px;'>Unrestricted, unlimited data usage running offline on your own hardware.</p>", unsafe_allow_html=True)
     
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
@@ -530,18 +530,49 @@ with tab_download:
 <div class="custom-card" style="margin-bottom: 30px;">
     <div class="card-title">Runtime Capability Matrix</div>
     <ul style="color: #475569 !important; font-size: 0.95rem; line-height: 1.8; padding-left: 20px;">
-        <li><strong>OS Requirement:</strong> Windows 10/11 (64-bit)</li>
+        <li><strong>OS Requirement:</strong> Windows / macOS / Linux</li>
         <li><strong>File Size Quota:</strong> UNLIMITED (Hardware Bound)</li>
         <li><strong>Data Privacy:</strong> 100% AIR-GAPPED</li>
-        <li><strong>Compute Architecture:</strong> AVX-512 / CUDA Support</li>
+        <li><strong>Prerequisite:</strong> Python 3.9+ installed</li>
     </ul>
 </div>
 """, unsafe_allow_html=True)
         
-        dummy_exe_bytes = b"Executable build payload placeholder"
+        # Automatically read the current app's code to package it
+        try:
+            with open(__file__, "r", encoding="utf-8") as f:
+                app_code = f.read()
+        except Exception:
+            app_code = "# Error reading source file. Please ensure app.py exists locally."
+            
+        reqs = "streamlit\npandas\nplotly\nnumpy"
+        
+        # Create a Windows Batch file to automate the offline launch
+        bat_code = """@echo off
+echo =======================================
+echo Starting EDA Engine Local Environment
+echo =======================================
+echo Installing required libraries...
+pip install -r requirements.txt
+echo.
+echo Launching the application...
+streamlit run app.py
+pause
+"""
+        # Create the Zip file in memory
+        import io
+        import zipfile
+        
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+            zip_file.writestr("app.py", app_code)
+            zip_file.writestr("requirements.txt", reqs)
+            zip_file.writestr("Launch_Windows.bat", bat_code)
+            
         st.download_button(
-            label="Download for Windows (.exe)", 
-            data=dummy_exe_bytes, 
-            file_name="EDA_Engine_V3_Installer.exe", 
-            mime="application/octet-stream"
+            label="📥 Download Local Engine (.zip)", 
+            data=zip_buffer.getvalue(), 
+            file_name="EDA_Engine_Offline.zip", 
+            mime="application/zip",
+            use_container_width=True
         )
