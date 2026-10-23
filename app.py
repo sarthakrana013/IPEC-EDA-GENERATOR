@@ -7,7 +7,7 @@ import time
 # 1. Page Configuration
 st.set_page_config(page_title="EDA Engine Cloud | Clean CSVs Fast", page_icon="✨", layout="wide")
 
-# 2. INJECTING MODERN SaaS UI/UX (DataSort Clone)
+# 2. INJECTING MODERN SaaS UI/UX (DataSort Vibe)
 st.markdown("""
 <style>
 #MainMenu {visibility: hidden;}
@@ -134,10 +134,50 @@ div[data-testid="metric-container"] { background-color: #ffffff !important; bord
 div[data-testid="stMetricLabel"] * { color: #64748b !important; font-family: 'Inter', sans-serif !important; font-size: 0.8rem !important; font-weight: 600 !important; text-transform: uppercase; letter-spacing: 0.05em;}
 div[data-testid="stMetricValue"] { font-size: 1.8rem !important; font-weight: 800 !important; color: #0f172a !important; font-family: 'Inter', sans-serif !important;}
 
-button[data-baseweb="tab"] { font-family: 'Inter', sans-serif !important; font-weight: 600 !important; font-size: 1rem !important; }
+/* ========================================================= */
+/* PREMIUM SAAS TABS OVERRIDE                                */
+/* ========================================================= */
+div[data-baseweb="tab-list"] {
+    gap: 12px;
+    margin-bottom: 20px;
+}
+button[data-baseweb="tab"] {
+    font-family: 'Inter', sans-serif !important;
+    font-weight: 600 !important;
+    font-size: 0.95rem !important;
+    background-color: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 8px !important;
+    padding: 10px 20px !important;
+    color: #475569 !important;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.02) !important;
+    transition: all 0.2s ease !important;
+    margin: 0 !important;
+}
+button[data-baseweb="tab"]:hover {
+    background-color: #f8fafc !important;
+    border-color: #cbd5e1 !important;
+    color: #0f172a !important;
+    transform: translateY(-1px);
+}
+button[data-baseweb="tab"][aria-selected="true"] {
+    background-color: #2563eb !important;
+    border-color: #2563eb !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2) !important;
+}
+button[data-baseweb="tab"][aria-selected="true"] * {
+    color: #ffffff !important;
+}
+/* Hide the default underline */
+div[data-baseweb="tab-highlight"] {
+    display: none !important;
+}
+/* ========================================================= */
+
 [data-testid="stCheckbox"] label span { color: #475569 !important; font-size: 0.9rem !important; }
 
-/* DataSort Hero Section Style */
+/* Hero Section */
 .hero-container { padding: 40px 0 60px 0; text-align: center; }
 .hero-title { font-size: 4rem; font-weight: 800; color: #0f172a !important; text-align: center; margin-bottom: 20px; letter-spacing: -0.03em; line-height: 1.1;}
 .hero-subtitle { font-size: 1.25rem; color: #475569 !important; text-align: center; margin-bottom: 40px; font-weight: 400; max-width: 650px; margin-left: auto; margin-right: auto; line-height: 1.6;}
