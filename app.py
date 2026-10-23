@@ -71,6 +71,7 @@ code, .stDataFrame, div[data-testid="stMetricValue"] {
     font-weight: 600 !important;
     padding: 0.6rem 1.2rem !important;
     width: 100%;
+    text-align: center;
     box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
 }
 .stButton > button:hover, [data-testid="stDownloadButton"] > button:hover { 
@@ -80,7 +81,7 @@ code, .stDataFrame, div[data-testid="stMetricValue"] {
 .stButton > button *, [data-testid="stDownloadButton"] > button * { color: #ffffff !important; }
 
 /* Sleek Inputs */
-input, textarea, [data-baseweb="input"], [data-baseweb="textarea"], [data-testid="stTextInput"] div {
+input:not([type="file"]), textarea, [data-baseweb="input"], [data-baseweb="textarea"], [data-testid="stTextInput"] div {
     background-color: #ffffff !important;
     color: #0f172a !important;
     border-radius: 6px !important;
@@ -101,6 +102,11 @@ input, textarea, [data-baseweb="input"], [data-baseweb="textarea"], [data-testid
 [data-testid="stFileUploader"] svg { fill: #94a3b8 !important; width: 40px; height: 40px; }
 [data-testid="stFileUploader"] div, [data-testid="stFileUploader"] span, [data-testid="stFileUploader"] small, [data-testid="stFileUploader"] p, [data-testid="stFileUploader"] label {
     color: #475569 !important;
+}
+
+/* FIX FOR DOUBLE OVERLAPPING TEXT: Hides native browser input text */
+[data-testid="stFileUploader"] input[type="file"] {
+    color: transparent !important;
 }
 
 [data-testid="stUploadedFile"] { background-color: #eff6ff !important; border: 1px solid #bfdbfe !important; border-radius: 8px !important; }
@@ -165,9 +171,10 @@ with tab_overview:
 <div class="hero-subtitle">Transform raw, dirty datasets into ML-ready matrices in seconds. 100% free, automated, and private.</div>
 """, unsafe_allow_html=True)
     
-    col_btn1, col_btn2, col_btn3 = st.columns([1.5, 1, 1.5])
+    # FIX: Tighter column ratio perfectly centers the button
+    col_btn1, col_btn2, col_btn3 = st.columns([3, 2, 3])
     with col_btn2:
-        if st.button("Start Cleaning for Free"):
+        if st.button("Start Cleaning for Free", use_container_width=True):
             st.info("Please click the '🔐 Login' tab above to authenticate your session.")
     
     st.markdown("<br><br><br>", unsafe_allow_html=True)
