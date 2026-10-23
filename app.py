@@ -15,7 +15,7 @@ footer {visibility: hidden;}
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap');
 
-/* Global Modern Font - REMOVED div and span to prevent breaking dataframe menus */
+/* Global Modern Font */
 html, body, p, h1, h2, h3, h4, h5, h6, label, li, b, strong { 
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
     color: #0f172a !important;
@@ -130,20 +130,20 @@ div[data-testid="stMetricLabel"] * { color: #64748b !important; font-family: 'In
 div[data-testid="stMetricValue"] { font-size: 1.8rem !important; font-weight: 800 !important; color: #0f172a !important; font-family: 'Inter', sans-serif !important;}
 
 /* ========================================================= */
-/* PREMIUM SAAS TABS OVERRIDE - FORCE APPLY                  */
+/* PREMIUM SAAS TABS OVERRIDE - BIG & BOLD                   */
 /* ========================================================= */
 [data-testid="stTabs"] div[data-baseweb="tab-list"] {
-    gap: 12px;
-    margin-bottom: 25px;
+    gap: 15px;
+    margin-bottom: 30px;
 }
 [data-testid="stTabs"] button[data-baseweb="tab"] {
     font-family: 'Inter', sans-serif !important;
-    font-weight: 600 !important;
-    font-size: 0.95rem !important;
+    font-weight: 800 !important;
+    font-size: 1.2rem !important;
     background-color: #ffffff !important;
-    border: 1px solid #e2e8f0 !important;
+    border: 2px solid #e2e8f0 !important;
     border-radius: 8px !important;
-    padding: 10px 20px !important;
+    padding: 12px 24px !important;
     color: #475569 !important;
     box-shadow: 0 1px 2px rgba(0,0,0,0.02) !important;
     transition: all 0.2s ease !important;
@@ -153,7 +153,7 @@ div[data-testid="stMetricValue"] { font-size: 1.8rem !important; font-weight: 80
     background-color: #f8fafc !important;
     border-color: #cbd5e1 !important;
     color: #0f172a !important;
-    transform: translateY(-1px);
+    transform: translateY(-2px);
 }
 [data-testid="stTabs"] button[data-baseweb="tab"][aria-selected="true"] {
     background-color: #2563eb !important;
@@ -192,7 +192,6 @@ if 'chat_history' not in st.session_state:
 if 'last_filename' not in st.session_state:
     st.session_state.last_filename = "Dataset"
 
-# MASSIVE, ULTRA-BOLD TITLE
 st.markdown("<h1 style='font-size: 2.8rem; font-weight: 900; color: #0f172a; padding: 15px 0; margin: 0; display: flex; align-items: center; gap: 12px; letter-spacing: -0.04em;'>✨ DataSort Cloud</h1>", unsafe_allow_html=True)
 st.markdown("<br>", unsafe_allow_html=True)
 
@@ -204,7 +203,7 @@ tab_overview, tab_auth, tab_app, tab_download = st.tabs([
 ])
 
 # ==========================================
-# TAB 1: OVERVIEW (DataSort SaaS Landing Page)
+# TAB 1: OVERVIEW 
 # ==========================================
 with tab_overview:
     st.markdown("""
@@ -389,7 +388,6 @@ with tab_app:
                             st.info("💡 Your data is raw and may contain missing values or invalid characters.")
                             if st.button("✨ Execute Aggressive Auto-Clean", use_container_width=True):
                                 with st.spinner("Purging anomalies and imputing missing data..."):
-                                    # Phantom character hunting
                                     dirty_placeholders = ['-', '?', 'NA', 'N/A', 'n/a', 'na', 'null', 'Null', '', ' ', '#N/A']
                                     df = df.replace(dirty_placeholders, np.nan)
                                     
@@ -512,7 +510,7 @@ with tab_app:
                     st.error(f"Data parse failure. Error: {e}")
 
 # ==========================================
-# TAB 4: DOWNLOAD APP (Dynamic Zip Generator)
+# TAB 4: DOWNLOAD APP
 # ==========================================
 with tab_download:
     st.markdown("""
@@ -538,7 +536,6 @@ with tab_download:
 </div>
 """, unsafe_allow_html=True)
         
-        # Automatically read the current app's code to package it
         try:
             with open(__file__, "r", encoding="utf-8") as f:
                 app_code = f.read()
@@ -547,7 +544,6 @@ with tab_download:
             
         reqs = "streamlit\npandas\nplotly\nnumpy"
         
-        # Create a Windows Batch file to automate the offline launch
         bat_code = """@echo off
 echo =======================================
 echo Starting EDA Engine Local Environment
@@ -559,7 +555,6 @@ echo Launching the application...
 streamlit run app.py
 pause
 """
-        # Create the Zip file in memory
         import io
         import zipfile
         
