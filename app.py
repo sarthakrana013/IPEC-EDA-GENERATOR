@@ -17,7 +17,8 @@ footer {visibility: hidden;}
 
 .stApp { background-color: #f8fafc !important; }
 
-html, body, p, h1, h2, h3, h4, h5, h6, label { 
+/* FIX: Added li, b, and strong to explicitly force dark text on lists without breaking dataframes */
+html, body, p, h1, h2, h3, h4, h5, h6, label, li, b, strong { 
     font-family: "Times New Roman", Times, Georgia, serif !important;
     color: #0f172a !important;
 }
@@ -215,9 +216,9 @@ The <b>EDA Engine Cloud</b> is a purpose-built automated pipeline designed to el
         st.markdown("""
 <div class="custom-card" style="background-color: #f8fafc; border-top: 4px solid #475569;">
     <div class="card-title" style="font-size: 1rem;">Vs. Enterprise BI (Power BI)</div>
-    <ul style="color: #475569 !important; font-size: 0.9rem; line-height: 1.6; padding-left: 15px; margin-top: 10px;">
-        <li style="margin-bottom: 8px;"><b>Theirs:</b> Expensive commercial licenses, steep learning curves, engineered primarily for executive dashboards.</li>
-        <li><b style="color:#107c41;">Ours:</b> Purpose-built specifically for ML engineers. One-click statistical imputation and direct-to-CSV dataset exports.</li>
+    <ul style="color: #0f172a !important; font-size: 0.9rem; line-height: 1.6; padding-left: 15px; margin-top: 10px;">
+        <li style="color: #0f172a !important; margin-bottom: 8px;"><b style="color: #0f172a !important;">Theirs:</b> Expensive commercial licenses, steep learning curves, engineered primarily for executive dashboards.</li>
+        <li style="color: #0f172a !important;"><b style="color:#107c41 !important;">Ours:</b> Purpose-built specifically for ML engineers. One-click statistical imputation and direct-to-CSV dataset exports.</li>
     </ul>
 </div>
 """, unsafe_allow_html=True)
@@ -226,9 +227,9 @@ The <b>EDA Engine Cloud</b> is a purpose-built automated pipeline designed to el
         st.markdown("""
 <div class="custom-card" style="background-color: #f8fafc; border-top: 4px solid #475569;">
     <div class="card-title" style="font-size: 1rem;">Vs. Cloud AI (ChatGPT)</div>
-    <ul style="color: #475569 !important; font-size: 0.9rem; line-height: 1.6; padding-left: 15px; margin-top: 10px;">
-        <li style="margin-bottom: 8px;"><b>Theirs:</b> Severe data privacy risks, restricted file payload sizes, and requires monthly cloud subscriptions.</li>
-        <li><b style="color:#107c41;">Ours:</b> 100% Air-Gapped desktop execution option ensures sensitive corporate and medical data never leaves your hard drive.</li>
+    <ul style="color: #0f172a !important; font-size: 0.9rem; line-height: 1.6; padding-left: 15px; margin-top: 10px;">
+        <li style="color: #0f172a !important; margin-bottom: 8px;"><b style="color: #0f172a !important;">Theirs:</b> Severe data privacy risks, restricted file payload sizes, and requires monthly cloud subscriptions.</li>
+        <li style="color: #0f172a !important;"><b style="color:#107c41 !important;">Ours:</b> 100% Air-Gapped desktop execution option ensures sensitive corporate and medical data never leaves your hard drive.</li>
     </ul>
 </div>
 """, unsafe_allow_html=True)
@@ -237,9 +238,9 @@ The <b>EDA Engine Cloud</b> is a purpose-built automated pipeline designed to el
         st.markdown("""
 <div class="custom-card" style="background-color: #f8fafc; border-top: 4px solid #475569;">
     <div class="card-title" style="font-size: 1rem;">Vs. Manual Python</div>
-    <ul style="color: #475569 !important; font-size: 0.9rem; line-height: 1.6; padding-left: 15px; margin-top: 10px;">
-        <li style="margin-bottom: 8px;"><b>Theirs:</b> Hours spent writing repetitive boilerplate code (Pandas, Matplotlib) for every new dataset encountered.</li>
-        <li><b style="color:#107c41;">Ours:</b> Autonomous vectorized regex cleaning and automated correlation visualization rendered in seconds.</li>
+    <ul style="color: #0f172a !important; font-size: 0.9rem; line-height: 1.6; padding-left: 15px; margin-top: 10px;">
+        <li style="color: #0f172a !important; margin-bottom: 8px;"><b style="color: #0f172a !important;">Theirs:</b> Hours spent writing repetitive boilerplate code (Pandas, Matplotlib) for every new dataset encountered.</li>
+        <li style="color: #0f172a !important;"><b style="color:#107c41 !important;">Ours:</b> Autonomous vectorized regex cleaning and automated correlation visualization rendered in seconds.</li>
     </ul>
 </div>
 """, unsafe_allow_html=True)
@@ -548,11 +549,11 @@ with tab_download:
         st.markdown("""
 <div class="custom-card" style="margin-bottom: 30px;">
     <div class="card-title">Runtime Capability Matrix</div>
-    <ul style="color: #475569 !important; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; line-height: 1.8;">
-        <li><strong>OS Requirement:</strong> Windows 10/11 (64-bit)</li>
-        <li><strong>File Size Quota:</strong> UNLIMITED (Hardware Bound)</li>
-        <li><strong>Data Privacy:</strong> 100% AIR-GAPPED</li>
-        <li><strong>Compute Architecture:</strong> AVX-512 / CUDA Support</li>
+    <ul style="color: #0f172a !important; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; line-height: 1.8;">
+        <li style="color: #0f172a !important;"><strong style="color: #0f172a !important;">OS Requirement:</strong> Windows 10/11 (64-bit)</li>
+        <li style="color: #0f172a !important;"><strong style="color: #0f172a !important;">File Size Quota:</strong> UNLIMITED (Hardware Bound)</li>
+        <li style="color: #0f172a !important;"><strong style="color: #0f172a !important;">Data Privacy:</strong> 100% AIR-GAPPED</li>
+        <li style="color: #0f172a !important;"><strong style="color: #0f172a !important;">Compute Architecture:</strong> AVX-512 / CUDA Support</li>
     </ul>
 </div>
 """, unsafe_allow_html=True)
