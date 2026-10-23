@@ -15,8 +15,8 @@ footer {visibility: hidden;}
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
 
-/* Global Modern Font */
-html, body, p, h1, h2, h3, h4, h5, h6, label, li, b, strong, span, div { 
+/* Global Modern Font - REMOVED div and span to prevent breaking dataframe menus */
+html, body, p, h1, h2, h3, h4, h5, h6, label, li, b, strong { 
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
     color: #0f172a !important;
 }
@@ -108,7 +108,7 @@ input:not([type="file"]), textarea, [data-baseweb="input"], [data-baseweb="texta
     font-size: 1rem !important;
 }
 
-/* FIX FOR DOUBLE OVERLAPPING TEXT: Hides native browser input text */
+/* Hides native browser input text */
 [data-testid="stFileUploader"] input[type="file"] {
     color: transparent !important;
 }
@@ -123,11 +123,6 @@ input:not([type="file"]), textarea, [data-baseweb="input"], [data-baseweb="texta
 [data-testid="stChatInput"] textarea { background-color: #ffffff !important; color: #0f172a !important; }
 [data-testid="stChatInput"] button { background-color: #2563eb !important; border-radius: 6px !important; }
 [data-testid="stChatInput"] button svg { fill: #ffffff !important; }
-
-/* Dataframes */
-[data-testid="stElementToolbar"] { background-color: #ffffff !important; border: 1px solid #e2e8f0 !important; border-radius: 6px !important; }
-[data-testid="stElementToolbar"] button svg { fill: #64748b !important; }
-div[data-baseweb="tooltip"] > div { background-color: #1e293b !important; color: #ffffff !important; border-radius: 6px !important; font-size: 0.8rem !important; }
 
 /* Metrics */
 div[data-testid="metric-container"] { background-color: #ffffff !important; border: 1px solid #e2e8f0 !important; border-radius: 12px !important; padding: 20px !important; box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important; }
@@ -169,7 +164,6 @@ button[data-baseweb="tab"][aria-selected="true"] {
 button[data-baseweb="tab"][aria-selected="true"] * {
     color: #ffffff !important;
 }
-/* Hide the default underline */
 div[data-baseweb="tab-highlight"] {
     display: none !important;
 }
