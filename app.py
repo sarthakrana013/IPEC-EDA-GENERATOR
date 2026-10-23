@@ -4,8 +4,10 @@ import plotly.express as px
 import numpy as np
 import time
 
+# 1. Page Configuration
 st.set_page_config(page_title="EDA Engine Cloud", page_icon="📊", layout="wide")
 
+# 2. INJECTING THE "EXCEL GREEN & WHITE" UI/UX
 st.markdown("""
 <style>
 #MainMenu {visibility: hidden;}
@@ -411,8 +413,19 @@ with tab_app:
                             st.warning("Data is raw. It may contain missing values.")
                             if st.button("✨ Execute Aggressive Auto-Clean", use_container_width=True):
                                 with st.spinner("Cleaning dataset on cloud server..."):
+                                    # 1. NEW LOGIC: Remove phantom characters (- and ?) before processing
+                                    dirty_placeholders = ['-', '?', 'NA', 'N/A', 'n/a', 'na', 'null', 'Null', '', ' ', '#N/A']
+                                    df = df.replace(dirty_placeholders, np.nan)
+                                    
+                                    # 2. Force convert previously string columns to numbers if applicable
+                                    for c in df.columns:
+                                        if df[c].dtype == 'object':
+                                            df[c] = pd.to_numeric(df[c], errors='ignore')
+                                            
+                                    # 3. Apply imputation
                                     num_cols = df.select_dtypes(include=[np.number]).columns.tolist()
                                     cat_cols = df.select_dtypes(exclude=[np.number]).columns.tolist()
+                                    
                                     for col in num_cols:
                                         median_val = df[col].median()
                                         df[col] = df[col].fillna(median_val if pd.notna(median_val) else 0)
