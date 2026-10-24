@@ -251,7 +251,7 @@ with tab_app:
                                     api_key = st.secrets["GEMINI_API_KEY"]
                                     
                                     genai.configure(api_key=api_key)
-                                    model = genai.GenerativeModel('gemini-pro')
+                                    model = genai.GenerativeModel('gemini-1.5-flash')
                                     
                                     stats_summary = df.describe().to_string()
                                     corr_summary = df.select_dtypes(include=[np.number]).corr().to_string() if len(df.select_dtypes(include=[np.number]).columns) > 1 else "Not enough numeric columns for correlation."
