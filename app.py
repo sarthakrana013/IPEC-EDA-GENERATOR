@@ -244,34 +244,33 @@ with tab_app:
                         st.markdown("<h3 style='font-size: 1.2rem; font-weight: 700; margin-bottom: 5px;'>LLM Reasoning Layer</h3>", unsafe_allow_html=True)
                         st.caption("Operating on pre-aggregated statistics to generate natural-language interpretations without exceeding context limits.")
                         
-                        api_key = st.text_input("Enter your Google Gemini API Key:", type="password")
-                        
                         if st.button("Generate Analytical Report"):
-                            if not api_key:
-                                st.error("API Key is required to power the LLM reasoning layer.")
-                            else:
-                                with st.spinner("Analyzing statistical aggregations..."):
-                                    try:
-                                        genai.configure(api_key=api_key)
-                                        model = genai.GenerativeModel('gemini-1.5-flash')
-                                        
-                                        # Generating compact pre-aggregated inputs
-                                        stats_summary = df.describe().to_string()
-                                        corr_summary = df.select_dtypes(include=[np.number]).corr().to_string() if len(df.select_dtypes(include=[np.number]).columns) > 1 else "Not enough numeric columns for correlation."
-                                        
-                                        prompt = f"""
-                                        You are an expert data analyst. Based on the following pre-aggregated statistics, draft a short, plain-language summary of what they imply. Highlight key distributions, extreme outliers, and any strong correlations.
-                                        
-                                        Summary Statistics:
-                                        {stats_summary}
-                                        
-                                        Correlation Matrix:
-                                        {corr_summary}
-                                        """
-                                        response = model.generate_content(prompt)
-                                        st.session_state.ai_report = response.text
-                                    except Exception as e:
-                                        st.error(f"LLM API Error: {e}")
+                            with st.spinner("Analyzing statistical aggregations..."):
+                                try:
+                                    # Fetch API key automatically in the background
+                                    api_key = st.secrets["GEMINI_API_KEY"]
+                                    
+                                    genai.configure(api_key=api_key)
+                                    model = genai.GenerativeModel('gemini-1.5-flash')
+                                    
+                                    stats_summary = df.describe().to_string()
+                                    corr_summary = df.select_dtypes(include=[np.number]).corr().to_string() if len(df.select_dtypes(include=[np.number]).columns) > 1 else "Not enough numeric columns for correlation."
+                                    
+                                    prompt = f"""
+                                    You are an expert data analyst. Based on the following pre-aggregated statistics, draft a short, plain-language summary of what they imply. Highlight key distributions, extreme outliers, and any strong correlations.
+                                    
+                                    Summary Statistics:
+                                    {stats_summary}
+                                    
+                                    Correlation Matrix:
+                                    {corr_summary}
+                                    """
+                                    response = model.generate_content(prompt)
+                                    st.session_state.ai_report = response.text
+                                except KeyError:
+                                    st.error("🛑 Configuration Error: GEMINI_API_KEY not found in Streamlit secrets.")
+                                except Exception as e:
+                                    st.error(f"LLM API Error: {e}")
                                         
                         if st.session_state.ai_report:
                             st.markdown("<div style='background-color:#ffffff; padding:20px; border-radius:8px; border:1px solid #e2e8f0; margin-top:20px;'>", unsafe_allow_html=True)
