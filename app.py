@@ -56,6 +56,9 @@ div[data-testid="stButton"] > button *, div[data-testid="stDownloadButton"] > bu
 .hero-subtitle { font-size: 1.25rem; color: #475569 !important; text-align: center; margin-bottom: 40px; font-weight: 400; max-width: 650px; margin-left: auto; margin-right: auto; line-height: 1.6;}
 .highlight-text { color: #107c41 !important; }
 
+/* Restore icon font (the global Inter rule above breaks Streamlit's icons) */
+[data-testid="stIconMaterial"], .material-symbols-rounded, .material-icons, span[class*="material-symbols"] { font-family: "Material Symbols Rounded", "Material Icons" !important; }
+
 /* Chat input: white text inside the box */
 [data-testid="stChatInput"] textarea,
 [data-testid="stChatInput"] textarea * { color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; caret-color: #ffffff !important; }
@@ -267,7 +270,7 @@ with tab_app:
                                     # Fetch API key automatically in the background
                                     api_key = st.secrets["GEMINI_API_KEY"]
                                     genai.configure(api_key=api_key)
-                                    model = genai.GenerativeModel('gemini-2.5-flash')
+                                    model = genai.GenerativeModel('gemini-3.8-flash')
 
                                     stats_summary = df.describe().to_string()
                                     corr_summary = df.select_dtypes(include=[np.number]).corr().to_string() if len(df.select_dtypes(include=[np.number]).columns) > 1 else "Not enough numeric columns for correlation."
@@ -342,6 +345,8 @@ with tab_chat:
     st.markdown("<h2 style='font-weight: 800; text-align: center; margin-top: 20px; font-size: 2.2rem; letter-spacing: -0.02em;'>💬 DataSort Assistant</h2>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center; color: #64748b !important; margin-bottom: 20px;'>Ask about data cleaning, EDA, or your uploaded dataset.</p>", unsafe_allow_html=True)
 
+    AVATARS = {"user": "🧑‍💻", "assistant": "🤖"}
+
     # Build the bot's instructions (and dataset context, if a file is loaded)
     def build_system_prompt():
         prompt = (
@@ -371,7 +376,7 @@ with tab_chat:
 
     # Show previous messages
     for msg in st.session_state.chat_history:
-        with st.chat_message(msg["role"]):
+        with st.chat_message(msg["role"], avatar=AVATARS[msg["role"]]):
             st.markdown(msg["content"])
 
     # Input box
@@ -379,14 +384,14 @@ with tab_chat:
 
     if user_input:
         st.session_state.chat_history.append({"role": "user", "content": user_input})
-        with st.chat_message("user"):
+        with st.chat_message("user", avatar=AVATARS["user"]):
             st.markdown(user_input)
 
-        with st.chat_message("assistant"):
+        with st.chat_message("assistant", avatar=AVATARS["assistant"]):
             try:
                 genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
                 model = genai.GenerativeModel(
-                    "gemini-2.5-flash",
+                    "gemini-3.8-flash",
                     system_instruction=build_system_prompt()
                 )
 
