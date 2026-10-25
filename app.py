@@ -214,7 +214,7 @@ with tab_app:
 
                     mod1, mod2, mod3, mod4 = st.tabs(["✨ Auto-Clean", "📊 Visuals", "🧠 AI Insights", "💾 Download"])
 
-                  with mod1:
+                    with mod1:
                         st.markdown("<h3 style='font-size: 1.2rem; font-weight: 700; margin-bottom: 15px;'>Dataset Preview</h3>", unsafe_allow_html=True)
                         st.dataframe(df.head(), use_container_width=True)
 
