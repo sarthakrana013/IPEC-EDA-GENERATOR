@@ -89,7 +89,7 @@ tab_overview, tab_auth, tab_app, tab_download, tab_chat = st.tabs([
     "🏠 Home",
     "🔐 Login",
     "⚡ Clean CSV (Max 5MB)",
-    "📥 Desktop App",
+    "📥 Local Engine", 
     "💬 Chatbot"
 ])
 
@@ -311,24 +311,63 @@ with tab_app:
                     st.error(f"Data parse failure. Error: {e}")
 
 # ==========================================
-# TAB 4: DOWNLOAD APP
+# TAB 4: LOCAL ENGINE
 # ==========================================
 with tab_download:
-    st.markdown("<h2 style='color: #0f172a !important; font-weight: 800; text-align: center; margin-top: 40px; font-size: 2.5rem; letter-spacing: -0.02em;'>Get the Local Engine</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='color: #475569 !important; text-align: center; font-size: 1.1rem; margin-bottom: 40px;'>Unrestricted, unlimited data usage running offline on your own hardware.</p>", unsafe_allow_html=True)
+    st.markdown("<h2 style='color: #0f172a !important; font-weight: 800; text-align: center; margin-top: 40px; font-size: 2.5rem; letter-spacing: -0.02em;'>Get the Local Engine (Pro)</h2>", unsafe_allow_html=True)
+    st.markdown("<p style='color: #475569 !important; text-align: center; font-size: 1.1rem; margin-bottom: 40px;'>Unrestricted, algorithmic data processing running offline on your own hardware.</p>", unsafe_allow_html=True)
 
-    col1, col2, col3 = st.columns([1, 2, 1])
+    col1, col2, col3 = st.columns([1, 4, 1])
     with col2:
-        st.markdown("<div class='custom-card' style='margin-bottom: 30px;'><div class='card-title'>Runtime Capability Matrix</div><ul style='color: #475569 !important; font-size: 0.95rem; line-height: 1.8; padding-left: 20px;'><li><strong>OS Requirement:</strong> Windows / macOS / Linux</li><li><strong>File Size Quota:</strong> UNLIMITED (Hardware Bound)</li><li><strong>Data Privacy:</strong> 100% AIR-GAPPED</li><li><strong>Prerequisite:</strong> Python 3.9+ installed</li></ul></div>", unsafe_allow_html=True)
+        # Apple-to-Apple Comparison Matrix
+        st.markdown("""
+        <div class='custom-card' style='margin-bottom: 30px; padding: 20px 30px;'>
+            <div class='card-title' style='text-align: center; font-size: 1.3rem; margin-bottom: 20px;'>Architecture Comparison Matrix</div>
+            <table style='width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.95rem;'>
+                <tr style='border-bottom: 2px solid #e2e8f0; text-align: left;'>
+                    <th style='padding: 12px 10px; color: #0f172a;'>Architecture Feature</th>
+                    <th style='padding: 12px 10px; color: #64748b;'>Cloud Sandbox (Lite)</th>
+                    <th style='padding: 12px 10px; color: #107c41;'>Local Engine (Pro)</th>
+                </tr>
+                <tr style='border-bottom: 1px solid #e2e8f0;'>
+                    <td style='padding: 12px 10px; font-weight: 600; color: #334155;'>File Size Limit</td>
+                    <td style='padding: 12px 10px; color: #64748b;'>5.0 MB (Hard Limit)</td>
+                    <td style='padding: 12px 10px; font-weight: 700; color: #107c41;'>Unlimited (Hardware RAM Bound)</td>
+                </tr>
+                <tr style='border-bottom: 1px solid #e2e8f0;'>
+                    <td style='padding: 12px 10px; font-weight: 600; color: #334155;'>Data Imputation Engine</td>
+                    <td style='padding: 12px 10px; color: #64748b;'>Statistical (Median / Mode)</td>
+                    <td style='padding: 12px 10px; font-weight: 700; color: #107c41;'>Predictive ML (KNN / MICE)</td>
+                </tr>
+                <tr style='border-bottom: 1px solid #e2e8f0;'>
+                    <td style='padding: 12px 10px; font-weight: 600; color: #334155;'>Advanced Analytics</td>
+                    <td style='padding: 12px 10px; color: #64748b;'>Basic EDA Visualizations</td>
+                    <td style='padding: 12px 10px; font-weight: 700; color: #107c41;'>Unsupervised Clustering (K-Means)</td>
+                </tr>
+                <tr style='border-bottom: 1px solid #e2e8f0;'>
+                    <td style='padding: 12px 10px; font-weight: 600; color: #334155;'>Data Privacy</td>
+                    <td style='padding: 12px 10px; color: #64748b;'>Ephemeral Cloud Hosting</td>
+                    <td style='padding: 12px 10px; font-weight: 700; color: #107c41;'>100% Air-Gapped On-Premise</td>
+                </tr>
+                <tr>
+                    <td style='padding: 12px 10px; font-weight: 600; color: #334155;'>Compute Resources</td>
+                    <td style='padding: 12px 10px; color: #64748b;'>Shared Cloud CPU</td>
+                    <td style='padding: 12px 10px; font-weight: 700; color: #107c41;'>Dedicated Multi-Core CPU</td>
+                </tr>
+            </table>
+        </div>
+        """, unsafe_allow_html=True)
 
+        # Generate the downloadable payload
         try:
             with open(__file__, "r", encoding="utf-8") as f:
                 app_code = f.read()
         except Exception:
             app_code = "# Error reading source file. Please ensure app.py exists locally."
 
-        reqs = "streamlit\npandas\nplotly\nnumpy\ngoogle-generativeai"
-        bat_code = "@echo off\necho Starting EDA Engine Local Environment\npip install -r requirements.txt\nstreamlit run app.py\npause"
+        # Adding scikit-learn to the local requirements so the Pro version supports ML imputation
+        reqs = "streamlit\npandas\nplotly\nnumpy\ngoogle-genai\nscikit-learn"
+        bat_code = "@echo off\necho Starting DataSort Pro Local Engine...\npip install -r requirements.txt\nstreamlit run app.py\npause"
 
         import io, zipfile
         zip_buffer = io.BytesIO()
@@ -337,7 +376,7 @@ with tab_download:
             zip_file.writestr("requirements.txt", reqs)
             zip_file.writestr("Launch_Windows.bat", bat_code)
 
-        st.download_button("📥 Download Local Engine (.zip)", data=zip_buffer.getvalue(), file_name="EDA_Engine_Offline.zip", mime="application/zip", use_container_width=True)
+        st.download_button("📥 Download Local Engine (.zip)", data=zip_buffer.getvalue(), file_name="DataSort_Pro_Engine.zip", mime="application/zip", use_container_width=True)
 
 # ==========================================
 # TAB 5: CHATBOT
