@@ -4,7 +4,7 @@ import plotly.express as px
 import numpy as np
 import time
 import google.generativeai as genai
-from sklearn.impute import KNNImputer
+
 
 # 1. Page Configuration
 st.set_page_config(page_title="DataSort Cloud | Clean CSVs Fast", page_icon="✨", layout="wide")
@@ -214,51 +214,33 @@ with tab_app:
 
                     mod1, mod2, mod3, mod4 = st.tabs(["✨ Auto-Clean", "📊 Visuals", "🧠 AI Insights", "💾 Download"])
 
-                    with mod1:
+                  with mod1:
                         st.markdown("<h3 style='font-size: 1.2rem; font-weight: 700; margin-bottom: 15px;'>Dataset Preview</h3>", unsafe_allow_html=True)
                         st.dataframe(df.head(), use_container_width=True)
 
                         if not st.session_state.cleaned:
                             st.info("💡 Your data is raw and may contain missing values or invalid characters.")
-                            
-                            #  Algorithm Selection Toggle
-                            st.markdown("<h4 style='font-size: 1rem; font-weight: 600; margin-top: 15px;'>Select Cleaning Engine</h4>", unsafe_allow_html=True)
-                            clean_engine = st.radio("Imputation Methodology:", 
-                                ["Fast Clean (Statistical Median/Mode)", "Deep Predict (KNN Machine Learning)"], 
-                                horizontal=True, label_visibility="collapsed")
-                            
-                            if st.button("✨ Execute Auto-Clean", use_container_width=True):
+                            if st.button("✨ Execute Aggressive Auto-Clean", use_container_width=True):
                                 with st.spinner("Purging anomalies and imputing missing data..."):
-                                    # 1. Standardize anomalies
                                     dirty_placeholders = ['-', '?', 'NA', 'N/A', 'n/a', 'na', 'null', 'Null', '', ' ', '#N/A']
                                     df = df.replace(dirty_placeholders, np.nan)
 
-                                    # 2. Coerce schemas
                                     for c in df.columns:
                                         if df[c].dtype == 'object': df[c] = pd.to_numeric(df[c], errors='ignore')
 
                                     num_cols = df.select_dtypes(include=[np.number]).columns.tolist()
                                     cat_cols = df.select_dtypes(exclude=[np.number]).columns.tolist()
 
-                                    # 3. Handle Categorical (Mode)
+                                    for col in num_cols: df[col] = df[col].fillna(df[col].median() if pd.notna(df[col].median()) else 0)
                                     for col in cat_cols:
                                         mode_series = df[col].mode()
                                         df[col] = df[col].fillna(mode_series[0] if not mode_series.empty else "Unknown")
-
-                                    # 4. Handle Numeric based on selected engine
-                                    if clean_engine == "Deep Predict (KNN Machine Learning)" and len(num_cols) > 0:
-                                        imputer = KNNImputer(n_neighbors=5, weights="distance")
-                                        df[num_cols] = imputer.fit_transform(df[num_cols])
-                                    else:
-                                        # Fallback to standard statistical median
-                                        for col in num_cols: 
-                                            df[col] = df[col].fillna(df[col].median() if pd.notna(df[col].median()) else 0)
 
                                     st.session_state.df = df
                                     st.session_state.cleaned = True
                                     st.rerun()
                         else:
-                            st.success("✅ Dataset has been rigorously cleaned. Zero missing values remain.")
+                            st.success("✅ Dataset has been aggressively cleaned. Zero missing values remain.")
 
                     with mod2:
                         st.markdown("<h3 style='font-size: 1.2rem; font-weight: 700; margin-bottom: 15px;'>Visual Analytics</h3>", unsafe_allow_html=True)
