@@ -55,6 +55,11 @@ div[data-testid="stButton"] > button *, div[data-testid="stDownloadButton"] > bu
 .hero-title { font-size: 4.5rem; font-weight: 900; color: #0f172a !important; text-align: center; margin-bottom: 20px; letter-spacing: -0.04em; line-height: 1.1;}
 .hero-subtitle { font-size: 1.25rem; color: #475569 !important; text-align: center; margin-bottom: 40px; font-weight: 400; max-width: 650px; margin-left: auto; margin-right: auto; line-height: 1.6;}
 .highlight-text { color: #107c41 !important; }
+
+/* Chat input: white text inside the box */
+[data-testid="stChatInput"] textarea,
+[data-testid="stChatInput"] textarea * { color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; caret-color: #ffffff !important; }
+[data-testid="stChatInput"] textarea::placeholder { color: #cbd5e1 !important; -webkit-text-fill-color: #cbd5e1 !important; opacity: 1 !important; }
 </style>
 """, unsafe_allow_html=True)
 
