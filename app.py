@@ -390,23 +390,38 @@ with tab_chat:
         with st.chat_message("assistant", avatar=AVATARS["assistant"]):
             try:
                 genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-                model = genai.GenerativeModel(
-                    "gemini-3.8-flash",
-                    system_instruction=build_system_prompt()
-                )
 
                 # Convert earlier messages to Gemini's format (roles: "user" / "model")
                 past = [
                     {"role": "user" if m["role"] == "user" else "model", "parts": [m["content"]]}
                     for m in st.session_state.chat_history[:-1]
                 ]
-                chat = model.start_chat(history=past)
-                stream = chat.send_message(user_input, stream=True)
 
-                reply = st.write_stream(chunk.text for chunk in stream if chunk.text)
-                st.session_state.chat_history.append({"role": "assistant", "content": reply})
+                # Try models in order; each attempt gives up after 45s instead of hanging
+                reply, last_error = None, None
+                with st.spinner("Thinking..."):
+                    for model_name in ["gemini-3.8-flash", "gemini-3.5-flash", "gemini-3.5-flash-lite"]:
+                        try:
+                            model = genai.GenerativeModel(model_name, system_instruction=build_system_prompt())
+                            chat = model.start_chat(history=past)
+                            response = chat.send_message(user_input, request_options={"timeout": 45, "retry": None})
+                            reply = response.text
+                            break
+                        except KeyError:
+                            raise
+                        except Exception as e:
+                            last_error = e
+
+                if reply is None:
+                    st.session_state.chat_history.pop()  # drop the unanswered question
+                    st.error(f"Chatbot error (all models failed): {last_error}")
+                else:
+                    st.markdown(reply)
+                    st.session_state.chat_history.append({"role": "assistant", "content": reply})
 
             except KeyError:
+                st.session_state.chat_history.pop()
                 st.error("🛑 GEMINI_API_KEY not found in Streamlit secrets.")
             except Exception as e:
+                st.session_state.chat_history.pop()
                 st.error(f"Chatbot error: {e}")
