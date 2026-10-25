@@ -13,14 +13,11 @@ st.markdown("""
 <style>
 #MainMenu {visibility: hidden;}
 footer {visibility: hidden;}
-
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
-
-html, body, p, h1, h2, h3, h4, h5, h6, label, li, span, div { 
+html, body, p, h1, h2, h3, h4, h5, h6, label, li, span, div {
     font-family: 'Inter', sans-serif !important;
     color: #0f172a !important;
 }
-
 .stApp { background-color: #f8fafc !important; }
 
 /* TABS OVERRIDE - FORCES SAAS PILL DESIGN */
@@ -73,15 +70,18 @@ if 'ai_report' not in st.session_state:
     st.session_state.ai_report = None
 if 'last_filename' not in st.session_state:
     st.session_state.last_filename = "Dataset"
+if 'chat_history' not in st.session_state:
+    st.session_state.chat_history = []
 
 st.markdown("<h1 style='font-size: 2.8rem; font-weight: 900; color: #0f172a; padding: 15px 0; margin: 0; display: flex; align-items: center; gap: 12px; letter-spacing: -0.04em;'>✨ DataSort Cloud</h1>", unsafe_allow_html=True)
 st.markdown("<br>", unsafe_allow_html=True)
 
-tab_overview, tab_auth, tab_app, tab_download = st.tabs([
-    "🏠 Home", 
-    "🔐 Login", 
-    "⚡ Clean CSV (Max 5MB)", 
-    "📥 Desktop App"
+tab_overview, tab_auth, tab_app, tab_download, tab_chat = st.tabs([
+    "🏠 Home",
+    "🔐 Login",
+    "⚡ Clean CSV (Max 5MB)",
+    "📥 Desktop App",
+    "💬 Chatbot"
 ])
 
 # ==========================================
@@ -89,21 +89,21 @@ tab_overview, tab_auth, tab_app, tab_download = st.tabs([
 # ==========================================
 with tab_overview:
     st.markdown("""
-<div class="hero-container">
-    <div class="hero-title">Clean Messy CSV Files <span class="highlight-text">Free.</span></div>
-    <div class="hero-subtitle">The fastest, most secure way to transform raw datasets into ML-ready matrices. Instantly format, impute, and export—no coding required.</div>
-</div>
-""", unsafe_allow_html=True)
-    
+    <div class="hero-container">
+        <div class="hero-title">Clean Messy CSV Files <span class="highlight-text">Free.</span></div>
+        <div class="hero-subtitle">The fastest, most secure way to transform raw datasets into ML-ready matrices. Instantly format, impute, and export—no coding required.</div>
+    </div>
+    """, unsafe_allow_html=True)
+
     col_btn1, col_btn2, col_btn3 = st.columns([3, 2, 3])
     with col_btn2:
         if st.button("Start Cleaning for Free", use_container_width=True):
             st.info("Please click the '🔐 Login' tab above to authenticate your session.")
-    
+
     st.markdown("<div style='text-align: center; color: #94a3b8; font-size: 0.85rem; margin-top: 15px;'>100% Free • Secure Local Processing • No Credit Card Required</div>", unsafe_allow_html=True)
     st.markdown("<br><br><br>", unsafe_allow_html=True)
     st.markdown("<h3 style='text-align: center; font-weight: 800; font-size: 2rem; margin-bottom: 40px; letter-spacing: -0.02em;'>How it works</h3>", unsafe_allow_html=True)
-    
+
     c1, c2, c3 = st.columns(3)
     with c1:
         st.markdown("<div class='custom-card' style='text-align: center;'><div class='card-icon'>📤</div><div class='card-title'>1. Upload your file</div><div class='card-text'>Drag and drop your messy CSV, Excel, or JSON directly into our secure, ephemeral sandbox.</div></div>", unsafe_allow_html=True)
@@ -134,28 +134,29 @@ with tab_auth:
                 </svg>
                 <div style="font-weight: 600; font-size: 1.5rem; color: #0f172a !important; margin-top: 15px; margin-bottom: 20px;">Sign in to GitHub</div>
             </div>
-            
             <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 25px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
                 <p style="font-size: 0.95rem; margin-bottom: 8px; color: #0f172a !important; font-weight: 600;">Username or email address</p>
             """, unsafe_allow_html=True)
-            
+
             email = st.text_input("Email", label_visibility="collapsed")
-            
+
             st.markdown("""
                 <div style='display: flex; justify-content: space-between; align-items: center; margin-top: 20px; margin-bottom: 8px;'>
                     <span style='font-size: 0.95rem; color: #0f172a !important; font-weight: 600;'>Password</span>
                     <a href='#' style='color: #107c41; font-size: 0.85rem; font-weight: 500; text-decoration: none;'>Forgot password?</a>
                 </div>
             """, unsafe_allow_html=True)
+
             token = st.text_input("Password", type="password", label_visibility="collapsed")
             st.markdown("<br>", unsafe_allow_html=True)
-            
+
             if st.button("Sign in", use_container_width=True):
                 st.session_state.logged_in = True
                 st.session_state.username = "telemetry-inst-01"
                 st.success("Authenticating...")
                 time.sleep(0.5)
                 st.rerun()
+
             st.markdown("</div>", unsafe_allow_html=True)
 
 # ==========================================
@@ -167,27 +168,31 @@ with tab_app:
         st.info("Navigate to the '🔐 Login' tab to sign in.")
     else:
         st.markdown("<div style='text-align: center; margin-bottom: 30px;'><h2 style='font-weight: 800; color: #0f172a; margin-bottom: 10px; font-size: 2.2rem; letter-spacing: -0.02em;'>Upload your messy dataset</h2><p style='color: #64748b; font-size: 1.1rem;'>Supports CSV, Excel, JSON, and Parquet up to 5.0 MB.</p></div>", unsafe_allow_html=True)
+
         uploaded_file = st.file_uploader("", type=['csv', 'xlsx', 'json', 'parquet'], label_visibility="collapsed")
-        
+
         if uploaded_file:
             file_size_mb = uploaded_file.size / (1024 * 1024)
+
             if file_size_mb > 5.0:
                 st.error(f"🛑 REJECTED: Your file is {file_size_mb:.2f}MB. Free tier limit is 5.0 MB.")
             else:
                 try:
                     file_ext = uploaded_file.name.split('.')[-1].lower()
+
                     if st.session_state.df is None or st.session_state.last_filename != uploaded_file.name:
                         st.session_state.last_filename = uploaded_file.name
                         if file_ext in ['csv', 'txt']: st.session_state.df = pd.read_csv(uploaded_file)
                         elif file_ext in ['xlsx', 'xls']: st.session_state.df = pd.read_excel(uploaded_file)
                         elif file_ext == 'json': st.session_state.df = pd.read_json(uploaded_file)
                         elif file_ext == 'parquet': st.session_state.df = pd.read_parquet(uploaded_file)
+
                         st.session_state.df.columns = st.session_state.df.columns.str.strip()
                         st.session_state.cleaned = False
                         st.session_state.ai_report = None
-                    
+
                     df = st.session_state.df
-                    
+
                     st.markdown("<br>", unsafe_allow_html=True)
                     col1, col2, col3, col4, col5 = st.columns(5)
                     col1.metric("TOTAL ROWS", f"{df.shape[0]:,}")
@@ -195,39 +200,46 @@ with tab_app:
                     col3.metric("FILE SIZE", f"{file_size_mb:.2f} MB")
                     col4.metric("NUMERIC COLS", f"{len(df.select_dtypes(include=['float64', 'int64']).columns)}")
                     col5.metric("MISSING VALUES", f"{df.isnull().sum().sum():,}")
-                    
+
                     st.markdown("<hr style='margin: 30px 0; border: 1px solid #e2e8f0;'>", unsafe_allow_html=True)
-                    
+
                     mod1, mod2, mod3, mod4 = st.tabs(["✨ Auto-Clean", "📊 Visuals", "🧠 AI Insights", "💾 Download"])
-                    
+
                     with mod1:
                         st.markdown("<h3 style='font-size: 1.2rem; font-weight: 700; margin-bottom: 15px;'>Dataset Preview</h3>", unsafe_allow_html=True)
                         st.dataframe(df.head(), use_container_width=True)
+
                         if not st.session_state.cleaned:
                             st.info("💡 Your data is raw and may contain missing values or invalid characters.")
                             if st.button("✨ Execute Aggressive Auto-Clean", use_container_width=True):
                                 with st.spinner("Purging anomalies and imputing missing data..."):
                                     dirty_placeholders = ['-', '?', 'NA', 'N/A', 'n/a', 'na', 'null', 'Null', '', ' ', '#N/A']
                                     df = df.replace(dirty_placeholders, np.nan)
+
                                     for c in df.columns:
                                         if df[c].dtype == 'object': df[c] = pd.to_numeric(df[c], errors='ignore')
+
                                     num_cols = df.select_dtypes(include=[np.number]).columns.tolist()
                                     cat_cols = df.select_dtypes(exclude=[np.number]).columns.tolist()
+
                                     for col in num_cols: df[col] = df[col].fillna(df[col].median() if pd.notna(df[col].median()) else 0)
                                     for col in cat_cols:
                                         mode_series = df[col].mode()
                                         df[col] = df[col].fillna(mode_series[0] if not mode_series.empty else "Unknown")
+
                                     st.session_state.df = df
                                     st.session_state.cleaned = True
                                     st.rerun()
                         else:
                             st.success("✅ Dataset has been aggressively cleaned. Zero missing values remain.")
-                    
+
                     with mod2:
                         st.markdown("<h3 style='font-size: 1.2rem; font-weight: 700; margin-bottom: 15px;'>Visual Analytics</h3>", unsafe_allow_html=True)
                         numeric_cols_viz = df.select_dtypes(include=[np.number]).columns.tolist()
+
                         if len(numeric_cols_viz) > 0:
                             chart_type = st.radio("Select Analysis Type:", ["Correlation Matrix", "Feature Distribution", "Scatter Plot"], horizontal=True)
+
                             if chart_type == "Correlation Matrix" and len(numeric_cols_viz) >= 2:
                                 fig = px.imshow(df[numeric_cols_viz].corr(), text_auto=".2f", color_continuous_scale=[[0.0, '#eff6ff'], [1.0, '#107c41']], aspect="auto")
                                 st.plotly_chart(fig, use_container_width=True)
@@ -235,43 +247,43 @@ with tab_app:
                                 fig = px.histogram(df, x=st.selectbox("Select Feature:", numeric_cols_viz), color_discrete_sequence=['#107c41'])
                                 st.plotly_chart(fig, use_container_width=True)
                             elif chart_type == "Scatter Plot" and len(numeric_cols_viz) >= 2:
-                                fig = px.scatter(df, x=st.selectbox("X-Axis:", numeric_cols_viz, index=0), y=st.selectbox("Y-Axis:", numeric_cols_viz, index=1 if len(numeric_cols_viz)>1 else 0), color_discrete_sequence=['#107c41'])
+                                fig = px.scatter(df, x=st.selectbox("X-Axis:", numeric_cols_viz, index=0), y=st.selectbox("Y-Axis:", numeric_cols_viz, index=1 if len(numeric_cols_viz) > 1 else 0), color_discrete_sequence=['#107c41'])
                                 st.plotly_chart(fig, use_container_width=True)
                         else:
                             st.info("No numerical columns available for visualizations.")
-                            
+
                     with mod3:
                         st.markdown("<h3 style='font-size: 1.2rem; font-weight: 700; margin-bottom: 5px;'>LLM Reasoning Layer</h3>", unsafe_allow_html=True)
                         st.caption("Operating on pre-aggregated statistics to generate natural-language interpretations without exceeding context limits.")
-                        
+
                         if st.button("Generate Analytical Report"):
                             with st.spinner("Analyzing statistical aggregations..."):
                                 try:
                                     # Fetch API key automatically in the background
                                     api_key = st.secrets["GEMINI_API_KEY"]
-                                    
                                     genai.configure(api_key=api_key)
-                                    model = genai.GenerativeModel('gemini-1.5-flash')
-                                    
+                                    model = genai.GenerativeModel('gemini-2.5-flash')
+
                                     stats_summary = df.describe().to_string()
                                     corr_summary = df.select_dtypes(include=[np.number]).corr().to_string() if len(df.select_dtypes(include=[np.number]).columns) > 1 else "Not enough numeric columns for correlation."
-                                    
+
                                     prompt = f"""
                                     You are an expert data analyst. Based on the following pre-aggregated statistics, draft a short, plain-language summary of what they imply. Highlight key distributions, extreme outliers, and any strong correlations.
-                                    
+
                                     Summary Statistics:
                                     {stats_summary}
-                                    
+
                                     Correlation Matrix:
                                     {corr_summary}
                                     """
+
                                     response = model.generate_content(prompt)
                                     st.session_state.ai_report = response.text
                                 except KeyError:
                                     st.error("🛑 Configuration Error: GEMINI_API_KEY not found in Streamlit secrets.")
                                 except Exception as e:
                                     st.error(f"LLM API Error: {e}")
-                                        
+
                         if st.session_state.ai_report:
                             st.markdown("<div style='background-color:#ffffff; padding:20px; border-radius:8px; border:1px solid #e2e8f0; margin-top:20px;'>", unsafe_allow_html=True)
                             st.markdown(st.session_state.ai_report)
@@ -285,6 +297,7 @@ with tab_app:
                         else:
                             st.success("✅ Dataset is fully processed and ready for download.")
                             st.download_button(label="📥 Download Cleaned CSV", data=df.to_csv(index=False).encode('utf-8'), file_name=f"Cleaned_{st.session_state.last_filename.split('.')[0]}.csv", mime="text/csv", use_container_width=True)
+
                 except Exception as e:
                     st.error(f"Data parse failure. Error: {e}")
 
@@ -294,25 +307,96 @@ with tab_app:
 with tab_download:
     st.markdown("<h2 style='color: #0f172a !important; font-weight: 800; text-align: center; margin-top: 40px; font-size: 2.5rem; letter-spacing: -0.02em;'>Get the Local Engine</h2>", unsafe_allow_html=True)
     st.markdown("<p style='color: #475569 !important; text-align: center; font-size: 1.1rem; margin-bottom: 40px;'>Unrestricted, unlimited data usage running offline on your own hardware.</p>", unsafe_allow_html=True)
-    
+
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         st.markdown("<div class='custom-card' style='margin-bottom: 30px;'><div class='card-title'>Runtime Capability Matrix</div><ul style='color: #475569 !important; font-size: 0.95rem; line-height: 1.8; padding-left: 20px;'><li><strong>OS Requirement:</strong> Windows / macOS / Linux</li><li><strong>File Size Quota:</strong> UNLIMITED (Hardware Bound)</li><li><strong>Data Privacy:</strong> 100% AIR-GAPPED</li><li><strong>Prerequisite:</strong> Python 3.9+ installed</li></ul></div>", unsafe_allow_html=True)
-        
+
         try:
             with open(__file__, "r", encoding="utf-8") as f:
                 app_code = f.read()
         except Exception:
             app_code = "# Error reading source file. Please ensure app.py exists locally."
-            
+
         reqs = "streamlit\npandas\nplotly\nnumpy\ngoogle-generativeai"
         bat_code = "@echo off\necho Starting EDA Engine Local Environment\npip install -r requirements.txt\nstreamlit run app.py\npause"
-        
+
         import io, zipfile
         zip_buffer = io.BytesIO()
         with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
             zip_file.writestr("app.py", app_code)
             zip_file.writestr("requirements.txt", reqs)
             zip_file.writestr("Launch_Windows.bat", bat_code)
-            
+
         st.download_button("📥 Download Local Engine (.zip)", data=zip_buffer.getvalue(), file_name="EDA_Engine_Offline.zip", mime="application/zip", use_container_width=True)
+
+# ==========================================
+# TAB 5: CHATBOT
+# ==========================================
+with tab_chat:
+    st.markdown("<h2 style='font-weight: 800; text-align: center; margin-top: 20px; font-size: 2.2rem; letter-spacing: -0.02em;'>💬 DataSort Assistant</h2>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #64748b !important; margin-bottom: 20px;'>Ask about data cleaning, EDA, or your uploaded dataset.</p>", unsafe_allow_html=True)
+
+    # Build the bot's instructions (and dataset context, if a file is loaded)
+    def build_system_prompt():
+        prompt = (
+            "You are DataSort Assistant, a friendly helper inside the DataSort Cloud web app. "
+            "The app cleans messy CSV/Excel/JSON/Parquet files (max 5 MB), imputes missing values, "
+            "shows visualizations (correlation matrix, distributions, scatter plots), and generates AI insights. "
+            "Help users with data cleaning, exploratory data analysis, pandas, and understanding their results. "
+            "Keep answers clear and concise."
+        )
+        df_ctx = st.session_state.get("df")
+        if df_ctx is not None:
+            prompt += (
+                f"\n\nThe user has uploaded a dataset named '{st.session_state.last_filename}' "
+                f"with {df_ctx.shape[0]} rows and {df_ctx.shape[1]} columns.\n"
+                f"Columns and types:\n{df_ctx.dtypes.to_string()}\n\n"
+                f"Missing values per column:\n{df_ctx.isnull().sum().to_string()}\n\n"
+                f"First 5 rows:\n{df_ctx.head().to_string()}\n\n"
+                f"Dataset cleaned already: {st.session_state.cleaned}"
+            )
+        return prompt
+
+    _, clear_col, _ = st.columns([3, 2, 3])
+    with clear_col:
+        if st.button("🗑️ Clear chat"):
+            st.session_state.chat_history = []
+            st.rerun()
+
+    # Show previous messages
+    for msg in st.session_state.chat_history:
+        with st.chat_message(msg["role"]):
+            st.markdown(msg["content"])
+
+    # Input box
+    user_input = st.chat_input("Ask me anything about DataSort or your dataset...")
+
+    if user_input:
+        st.session_state.chat_history.append({"role": "user", "content": user_input})
+        with st.chat_message("user"):
+            st.markdown(user_input)
+
+        with st.chat_message("assistant"):
+            try:
+                genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+                model = genai.GenerativeModel(
+                    "gemini-2.5-flash",
+                    system_instruction=build_system_prompt()
+                )
+
+                # Convert earlier messages to Gemini's format (roles: "user" / "model")
+                past = [
+                    {"role": "user" if m["role"] == "user" else "model", "parts": [m["content"]]}
+                    for m in st.session_state.chat_history[:-1]
+                ]
+                chat = model.start_chat(history=past)
+                stream = chat.send_message(user_input, stream=True)
+
+                reply = st.write_stream(chunk.text for chunk in stream if chunk.text)
+                st.session_state.chat_history.append({"role": "assistant", "content": reply})
+
+            except KeyError:
+                st.error("🛑 GEMINI_API_KEY not found in Streamlit secrets.")
+            except Exception as e:
+                st.error(f"Chatbot error: {e}")
