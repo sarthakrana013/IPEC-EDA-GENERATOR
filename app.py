@@ -136,6 +136,10 @@ def _to_number(x):
         return float(re.sub(r"[,$€£₹%\s]", "", t))
     except ValueError:
         pass
+    m = re.match(r"^\s*([-+]?[\d,]*\.?\d+)\s*(k|yrs?|years?|stars?)?\s*$", t, flags=re.I)   # '55k', '41 yrs', '5 stars'
+    if m:
+        val = float(m.group(1).replace(",", ""))
+        return val * 1000 if (m.group(2) or "").lower() == "k" else val
     w = _words_to_number(t)
     return float(w) if w is not None else np.nan
 
@@ -143,6 +147,16 @@ def _to_number(x):
 def _is_idlike(col):
     c = str(col).lower()
     return bool(re.search(r"(^|[_\s])(id|uuid|name|email|e-mail|phone|mobile|username)([_\s]|$)", c)) or "name" in c or "email" in c
+
+
+def _is_num(series):
+    """True for number columns only (True/False columns are not treated as numbers)."""
+    return pd.api.types.is_numeric_dtype(series) and not pd.api.types.is_bool_dtype(series)
+
+
+def _no_mode_fill(col):
+    """IDs, names, emails, phones, zip codes: never guess these from the most common value."""
+    return _is_idlike(col) or bool(re.search(r"(phone|mobile|zip|postal|pin|code)", str(col).lower()))
 
 
 def smart_clean(df_in):
@@ -206,7 +220,7 @@ def smart_clean(df_in):
     date_cols = set()
     for c in [c for c in df.columns if is_text(c)]:
         nn = df[c].dropna().astype(str)
-        if nn.empty or _is_idlike(c):
+        if nn.empty or _is_idlike(c) or re.search(r"(phone|mobile|zip|postal|pin|code|ssn)", c.lower()):
             continue
         looks_like_date_name = bool(re.search(r"(date|time|dob|born|joined|created|updated|_at$)", c.lower()))
         if not looks_like_date_name and nn.str.contains(r"\d").mean() < 0.8:
@@ -243,8 +257,9 @@ def smart_clean(df_in):
         elif nn.str.lower().nunique() < nn.nunique():          # same word in different cases
             canon = {}
             for key, variants in nn.groupby(nn.str.lower()):
-                if len(key) <= 3 and key.isalpha() and variants.str.isupper().any():
-                    canon[key] = key.upper()                      # short codes: USA, UK, NY
+                upper_n = int(variants.str.isupper().sum())
+                if len(key) <= 3 and key.isalpha() and upper_n and upper_n >= len(variants) - upper_n:
+                    canon[key] = key.upper()                      # short codes written mostly in caps: USA, UK
                 else:
                     canon[key] = key.title()
             new = df[c].map(lambda v: v if pd.isna(v) else canon[str(v).lower()])
@@ -255,6 +270,10 @@ def smart_clean(df_in):
         if changed:
             df[c] = new
             report.append(f"🔤 **{c}**: {kind} in {changed} value(s)")
+        if kind == "lower-cased":
+            bad_mail = int((~df[c].dropna().astype(str).str.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")).sum())
+            if bad_mail:
+                report.append(f"⚠️ **{c}**: {bad_mail} value(s) don't look like valid emails. Left unchanged, please review")
 
     # 5. Duplicates (after tidying, so near-duplicates are caught)
     before = len(df)
@@ -262,16 +281,32 @@ def smart_clean(df_in):
     if len(df) < before:
         report.append(f"♻️ Removed {before - len(df)} duplicate row(s)")
     for c in df.columns:
-        if re.search(r"(^|_)id$", c.lower()) and df[c].notna().any() and df[c].dropna().duplicated().any():
+        if re.search(r"(^|[_\s])id$", c.lower()) and df[c].notna().any() and df[c].dropna().duplicated().any():
             n = int(df[c].dropna().duplicated(keep=False).sum())
             report.append(f"⚠️ **{c}**: {n} rows still share an ID but have different values. Please review them manually")
 
-    # 6. Fill missing values
+    # 6. Flag (but never change) possible outliers and negatives (checked before filling gaps)
+    for c in df.columns:
+        if _is_num(df[c]) and not _is_idlike(c) and df[c].notna().sum() >= 5:
+            q1, q3 = df[c].quantile(0.25), df[c].quantile(0.75)
+            iqr = q3 - q1
+            if iqr > 0:
+                n_out = int(((df[c] < q1 - 3 * iqr) | (df[c] > q3 + 3 * iqr)).sum())
+                if n_out:
+                    report.append(f"⚠️ **{c}**: {n_out} possible outlier(s) found. Left unchanged, please review")
+
+    for c in df.columns:
+        if _is_num(df[c]) and re.search(r"(age|salary|income|price|amount|qty|quantity|count|rating|score|weight|height)", c.lower()):
+            neg = int((df[c] < 0).sum())
+            if neg:
+                report.append(f"⚠️ **{c}**: {neg} negative value(s) found. Left unchanged, please review")
+
+    # 7. Fill missing values
     for c in df.columns:
         miss = int(df[c].isna().sum())
         if not miss:
             continue
-        if pd.api.types.is_numeric_dtype(df[c]):
+        if _is_num(df[c]):
             if _is_idlike(c):
                 report.append(f"⚠️ **{c}**: {miss} missing ID value(s) left empty (IDs can't be guessed)")
                 continue
@@ -283,23 +318,13 @@ def smart_clean(df_in):
             report.append(f"📊 **{c}**: filled {miss} missing value(s) with the median ({fill:g})")
         else:
             nn = df[c].dropna()
-            if c in date_cols or _is_idlike(c) or (len(nn) and nn.nunique() / len(nn) > 0.9) or nn.empty:
+            if c in date_cols or _no_mode_fill(c) or (len(nn) and nn.nunique() / len(nn) > 0.9) or nn.empty:
                 df[c] = df[c].fillna("Unknown")
                 report.append(f"❓ **{c}**: filled {miss} missing value(s) with 'Unknown'")
             else:
                 mode = nn.mode()[0]
                 df[c] = df[c].fillna(mode)
                 report.append(f"🏷️ **{c}**: filled {miss} missing value(s) with the most common value ('{mode}')")
-
-    # 7. Flag (but never change) possible outliers
-    for c in df.columns:
-        if pd.api.types.is_numeric_dtype(df[c]) and not _is_idlike(c) and df[c].notna().sum() >= 5:
-            q1, q3 = df[c].quantile(0.25), df[c].quantile(0.75)
-            iqr = q3 - q1
-            if iqr > 0:
-                n_out = int(((df[c] < q1 - 3 * iqr) | (df[c] > q3 + 3 * iqr)).sum())
-                if n_out:
-                    report.append(f"⚠️ **{c}**: {n_out} possible outlier(s) found. Left unchanged, please review")
 
     # 8. Tidy number types (29.0 -> 29)
     for c in df.columns:
