@@ -2,11 +2,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import numpy as np
-import os
 import re
-import hmac
-import hashlib
-import time
 import google.generativeai as genai
 
 # 1. Page Configuration
@@ -60,12 +56,6 @@ div[data-testid="stButton"] > button *, div[data-testid="stDownloadButton"] > bu
 .hero-subtitle { font-size: 1.25rem; color: #475569 !important; text-align: center; margin-bottom: 40px; font-weight: 400; max-width: 650px; margin-left: auto; margin-right: auto; line-height: 1.6;}
 .highlight-text { color: #107c41 !important; }
 
-/* Form submit button (login form) */
-div[data-testid="stFormSubmitButton"] > button { background-color: #107c41 !important; color: #ffffff !important; border: none !important; border-radius: 8px !important; font-weight: 700 !important; padding: 0.75rem 1.5rem !important; width: 100%; font-size: 1.05rem !important; box-shadow: 0 4px 6px -1px rgba(16, 124, 65, 0.2) !important; }
-div[data-testid="stFormSubmitButton"] > button:hover { background-color: #0b5c2f !important; }
-div[data-testid="stFormSubmitButton"] > button * { color: #ffffff !important; }
-[data-testid="stForm"] { border: none !important; padding: 0 !important; }
-
 /* Restore icon font (the global Inter rule above breaks Streamlit's icons) */
 [data-testid="stIconMaterial"], .material-symbols-rounded, .material-icons, span[class*="material-symbols"] { font-family: "Material Symbols Rounded", "Material Icons" !important; }
 
@@ -76,10 +66,6 @@ div[data-testid="stFormSubmitButton"] > button * { color: #ffffff !important; }
 </style>
 """, unsafe_allow_html=True)
 
-if 'logged_in' not in st.session_state:
-    st.session_state.logged_in = False
-if 'username' not in st.session_state:
-    st.session_state.username = ""
 if 'df' not in st.session_state:
     st.session_state.df = None
 if 'cleaned' not in st.session_state:
@@ -92,10 +78,6 @@ if 'chat_history' not in st.session_state:
     st.session_state.chat_history = []
 if 'clean_report' not in st.session_state:
     st.session_state.clean_report = []
-if 'auth_method' not in st.session_state:
-    st.session_state.auth_method = None
-if 'access_denied' not in st.session_state:
-    st.session_state.access_denied = ""
 
 # ==========================================
 # SMART CLEANER
@@ -336,126 +318,11 @@ def smart_clean(df_in):
     return df, report
 
 
-# ==========================================
-# AUTHENTICATION
-#   - "Continue with Google": Streamlit's built-in OpenID Connect login (st.login)
-#   - Email + password: accounts stored as salted PBKDF2 hashes in Streamlit secrets
-#   - Local offline engine: set DATASORT_LOCAL=1 (done by Launch_Windows.bat) to skip login
-# ==========================================
-LOCAL_MODE = os.environ.get("DATASORT_LOCAL") == "1"
-MAX_FAILED_LOGINS = 5
-LOCKOUT_SECONDS = 300
-_DUMMY_HASH = "pbkdf2_sha256$260000$" + "00" * 16 + "$" + "00" * 32   # used so unknown emails take equally long
-
-
-def _secret_section(name):
-    try:
-        if name in st.secrets:
-            return st.secrets[name]
-    except Exception:
-        pass
-    return None
-
-
-def _google_logged_in():
-    try:
-        return bool(st.user.is_logged_in)
-    except Exception:
-        return False
-
-
-def _user_field(key):
-    try:
-        return st.user.get(key)
-    except Exception:
-        return getattr(st.user, key, None)
-
-
-def _email_allowed(email):
-    """Optional allow-list from secrets: [access] allowed_emails / allowed_domains."""
-    if not email:
-        return False
-    if _user_field("email_verified") is False:
-        return False
-    access = _secret_section("access")
-    emails = [str(e).lower() for e in (access.get("allowed_emails", []) if access else [])]
-    domains = [str(d).lower().lstrip("@") for d in (access.get("allowed_domains", []) if access else [])]
-    if not emails and not domains:
-        return True
-    return email in emails or email.split("@")[-1] in domains
-
-
-def _verify_password(password, stored):
-    """stored = 'pbkdf2_sha256$iterations$salt_hex$hash_hex'"""
-    try:
-        algo, iters, salt_hex, hash_hex = stored.split("$")
-        if algo != "pbkdf2_sha256":
-            return False
-        calc = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), bytes.fromhex(salt_hex), int(iters))
-        return hmac.compare_digest(calc.hex(), hash_hex)
-    except Exception:
-        return False
-
-
-@st.cache_resource
-def _attempt_log():
-    return {}   # shared by all sessions: {email: {"fails": n, "locked_until": timestamp}}
-
-
-def _locked_seconds(email):
-    rec = _attempt_log().get(email)
-    if rec and rec["locked_until"] > time.time():
-        return int(rec["locked_until"] - time.time())
-    return 0
-
-
-def _record_failure(email):
-    log = _attempt_log()
-    if len(log) > 5000:
-        log.clear()
-    rec = log.setdefault(email, {"fails": 0, "locked_until": 0})
-    rec["fails"] += 1
-    if rec["fails"] >= MAX_FAILED_LOGINS:
-        rec["locked_until"] = time.time() + LOCKOUT_SECONDS
-        rec["fails"] = 0
-
-
-def _reset_user_data():
-    st.session_state.df = None
-    st.session_state.cleaned = False
-    st.session_state.ai_report = None
-    st.session_state.clean_report = []
-    st.session_state.chat_history = []
-    st.session_state.last_filename = "Dataset"
-
-
-# ---- sync login state on every run ----
-st.session_state.access_denied = ""
-if LOCAL_MODE:
-    st.session_state.logged_in = True
-    st.session_state.username = "local-user"
-elif _google_logged_in():
-    _g_email = str(_user_field("email") or "").lower()
-    if _email_allowed(_g_email):
-        st.session_state.logged_in = True
-        st.session_state.username = _g_email
-        st.session_state.auth_method = "google"
-    else:
-        st.session_state.logged_in = False
-        st.session_state.access_denied = _g_email or "this account"
-elif st.session_state.auth_method == "google":
-    # Google session ended (signed out / cookie expired)
-    st.session_state.logged_in = False
-    st.session_state.username = ""
-    st.session_state.auth_method = None
-
-
 st.markdown("<h1 style='font-size: 2.8rem; font-weight: 900; color: #0f172a; padding: 15px 0; margin: 0; display: flex; align-items: center; gap: 12px; letter-spacing: -0.04em;'>✨ DataSort Cloud</h1>", unsafe_allow_html=True)
 st.markdown("<br>", unsafe_allow_html=True)
 
-tab_overview, tab_auth, tab_app, tab_download, tab_chat = st.tabs([
+tab_overview, tab_app, tab_download, tab_chat = st.tabs([
     "🏠 Home",
-    "🔐 Login",
     "⚡ Clean CSV (Max 5MB)",
     "📥 Desktop App",
     "💬 Chatbot"
@@ -475,9 +342,9 @@ with tab_overview:
     col_btn1, col_btn2, col_btn3 = st.columns([3, 2, 3])
     with col_btn2:
         if st.button("Start Cleaning for Free", use_container_width=True):
-            st.info("Please click the '🔐 Login' tab above to authenticate your session.")
+            st.info("Open the '⚡ Clean CSV' tab above and upload your dataset.")
 
-    st.markdown("<div style='text-align: center; color: #94a3b8; font-size: 0.85rem; margin-top: 15px;'>100% Free • Secure Local Processing • No Credit Card Required</div>", unsafe_allow_html=True)
+    st.markdown("<div style='text-align: center; color: #94a3b8; font-size: 0.85rem; margin-top: 15px;'>100% Free • No Sign-up Required • No Credit Card Required</div>", unsafe_allow_html=True)
     st.markdown("<br><br><br>", unsafe_allow_html=True)
     st.markdown("<h3 style='text-align: center; font-weight: 800; font-size: 2rem; margin-bottom: 40px; letter-spacing: -0.02em;'>How it works</h3>", unsafe_allow_html=True)
 
@@ -490,223 +357,142 @@ with tab_overview:
         st.markdown("<div class='custom-card' style='text-align: center;'><div class='card-icon'>🧠</div><div class='card-title'>3. Export & LLM Insights</div><div class='card-text'>Generate plain-language interpretation reports on pre-aggregated statistics, mitigating context limits.</div></div>", unsafe_allow_html=True)
 
 # ==========================================
-# TAB 2: AUTHENTICATION
-# ==========================================
-with tab_auth:
-    google_enabled = _secret_section("auth") is not None
-    _users_raw = _secret_section("users")
-    users = {str(k).strip().lower(): str(v) for k, v in dict(_users_raw).items()} if _users_raw else {}
-
-    _, mid, _ = st.columns([1, 1.2, 1])
-    with mid:
-        if LOCAL_MODE:
-            st.info("🖥️ Running in local mode: sign-in is not required on your own machine.")
-
-        elif st.session_state.logged_in:
-            st.markdown("<div style='text-align:center; font-size: 3rem; margin-top: 20px;'>✅</div>", unsafe_allow_html=True)
-            st.markdown(f"<div style='text-align:center; font-weight:700; font-size:1.3rem; margin-bottom: 4px;'>You're signed in</div><div style='text-align:center; color:#64748b !important; margin-bottom: 20px;'>{st.session_state.username}</div>", unsafe_allow_html=True)
-            if st.button("Sign out", use_container_width=True):
-                method = st.session_state.auth_method
-                st.session_state.logged_in = False
-                st.session_state.username = ""
-                st.session_state.auth_method = None
-                _reset_user_data()
-                if method == "google":
-                    st.logout()
-                else:
-                    st.rerun()
-
-        elif st.session_state.access_denied:
-            st.error(f"🚫 {st.session_state.access_denied} is not authorized to use this app.")
-            if st.button("Use a different account", use_container_width=True):
-                _reset_user_data()
-                st.logout()
-
-        else:
-            st.markdown("""
-            <div style="text-align: center; margin: 30px 0 20px 0;">
-                <div style="font-size: 2.6rem;">✨</div>
-                <div style="font-weight: 800; font-size: 1.6rem; color: #0f172a !important; margin-top: 8px;">Sign in to DataSort</div>
-                <div style="color: #64748b !important; margin-top: 6px;">Secure access to your data-cleaning workspace</div>
-            </div>
-            """, unsafe_allow_html=True)
-
-            if not google_enabled and not users:
-                st.error("Sign-in is not configured yet. The site owner needs to add `[auth]` (Google) and/or `[users]` to the app's Secrets.")
-            else:
-                if google_enabled:
-                    if st.button("Continue with Google", use_container_width=True):
-                        st.login()
-
-                if google_enabled and users:
-                    st.markdown("<div style='text-align:center; color:#94a3b8 !important; margin: 14px 0;'>— or sign in with email —</div>", unsafe_allow_html=True)
-
-                if users:
-                    with st.form("login_form"):
-                        email = st.text_input("Email address", placeholder="you@example.com")
-                        password = st.text_input("Password", type="password")
-                        submitted = st.form_submit_button("Sign in", use_container_width=True)
-
-                    if submitted:
-                        em = email.strip().lower()
-                        wait = _locked_seconds(em)
-                        if wait:
-                            st.error(f"Too many failed attempts. Please try again in {wait // 60 + 1} minute(s).")
-                        else:
-                            stored = users.get(em)
-                            ok = _verify_password(password, stored or _DUMMY_HASH) and stored is not None
-                            if ok:
-                                _attempt_log().pop(em, None)
-                                st.session_state.logged_in = True
-                                st.session_state.username = em
-                                st.session_state.auth_method = "password"
-                                st.rerun()
-                            else:
-                                _record_failure(em)
-                                time.sleep(0.8)
-                                st.error("Incorrect email or password.")
-                    st.caption("Accounts are created by the site administrator.")
-
-# ==========================================
-# TAB 3: CLOUD APP
+# TAB 2: CLOUD APP
 # ==========================================
 with tab_app:
-    if not st.session_state.logged_in:
-        st.error("Access Denied: Authentication required to access the cloud sandbox.")
-        st.info("Navigate to the '🔐 Login' tab to sign in.")
-    else:
-        st.markdown("<div style='text-align: center; margin-bottom: 30px;'><h2 style='font-weight: 800; color: #0f172a; margin-bottom: 10px; font-size: 2.2rem; letter-spacing: -0.02em;'>Upload your messy dataset</h2><p style='color: #64748b; font-size: 1.1rem;'>Supports CSV, Excel, JSON, and Parquet up to 5.0 MB.</p></div>", unsafe_allow_html=True)
+    st.markdown("<div style='text-align: center; margin-bottom: 30px;'><h2 style='font-weight: 800; color: #0f172a; margin-bottom: 10px; font-size: 2.2rem; letter-spacing: -0.02em;'>Upload your messy dataset</h2><p style='color: #64748b; font-size: 1.1rem;'>Supports CSV, Excel, JSON, and Parquet up to 5.0 MB.</p></div>", unsafe_allow_html=True)
 
-        uploaded_file = st.file_uploader("", type=['csv', 'xlsx', 'json', 'parquet'], label_visibility="collapsed")
+    uploaded_file = st.file_uploader("", type=['csv', 'xlsx', 'json', 'parquet'], label_visibility="collapsed")
 
-        if uploaded_file:
-            file_size_mb = uploaded_file.size / (1024 * 1024)
+    if uploaded_file:
+        file_size_mb = uploaded_file.size / (1024 * 1024)
 
-            if file_size_mb > 5.0:
-                st.error(f"🛑 REJECTED: Your file is {file_size_mb:.2f}MB. Free tier limit is 5.0 MB.")
-            else:
-                try:
-                    file_ext = uploaded_file.name.split('.')[-1].lower()
+        if file_size_mb > 5.0:
+            st.error(f"🛑 REJECTED: Your file is {file_size_mb:.2f}MB. Free tier limit is 5.0 MB.")
+        else:
+            try:
+                file_ext = uploaded_file.name.split('.')[-1].lower()
 
-                    if st.session_state.df is None or st.session_state.last_filename != uploaded_file.name:
-                        st.session_state.last_filename = uploaded_file.name
-                        if file_ext in ['csv', 'txt']: st.session_state.df = pd.read_csv(uploaded_file)
-                        elif file_ext in ['xlsx', 'xls']: st.session_state.df = pd.read_excel(uploaded_file)
-                        elif file_ext == 'json': st.session_state.df = pd.read_json(uploaded_file)
-                        elif file_ext == 'parquet': st.session_state.df = pd.read_parquet(uploaded_file)
+                if st.session_state.df is None or st.session_state.last_filename != uploaded_file.name:
+                    st.session_state.last_filename = uploaded_file.name
+                    if file_ext in ['csv', 'txt']: st.session_state.df = pd.read_csv(uploaded_file)
+                    elif file_ext in ['xlsx', 'xls']: st.session_state.df = pd.read_excel(uploaded_file)
+                    elif file_ext == 'json': st.session_state.df = pd.read_json(uploaded_file)
+                    elif file_ext == 'parquet': st.session_state.df = pd.read_parquet(uploaded_file)
 
-                        st.session_state.df.columns = st.session_state.df.columns.str.strip()
-                        st.session_state.cleaned = False
-                        st.session_state.clean_report = []
-                        st.session_state.ai_report = None
+                    st.session_state.df.columns = st.session_state.df.columns.str.strip()
+                    st.session_state.cleaned = False
+                    st.session_state.clean_report = []
+                    st.session_state.ai_report = None
+                    st.session_state.chat_history = []
 
-                    df = st.session_state.df
+                df = st.session_state.df
 
-                    st.markdown("<br>", unsafe_allow_html=True)
-                    col1, col2, col3, col4, col5 = st.columns(5)
-                    col1.metric("TOTAL ROWS", f"{df.shape[0]:,}")
-                    col2.metric("COLUMNS", f"{df.shape[1]}")
-                    col3.metric("FILE SIZE", f"{file_size_mb:.2f} MB")
-                    col4.metric("NUMERIC COLS", f"{len(df.select_dtypes(include=['float64', 'int64']).columns)}")
-                    col5.metric("MISSING VALUES", f"{df.isnull().sum().sum():,}")
+                st.markdown("<br>", unsafe_allow_html=True)
+                col1, col2, col3, col4, col5 = st.columns(5)
+                col1.metric("TOTAL ROWS", f"{df.shape[0]:,}")
+                col2.metric("COLUMNS", f"{df.shape[1]}")
+                col3.metric("FILE SIZE", f"{file_size_mb:.2f} MB")
+                col4.metric("NUMERIC COLS", f"{len(df.select_dtypes(include=['float64', 'int64']).columns)}")
+                col5.metric("MISSING VALUES", f"{df.isnull().sum().sum():,}")
 
-                    st.markdown("<hr style='margin: 30px 0; border: 1px solid #e2e8f0;'>", unsafe_allow_html=True)
+                st.markdown("<hr style='margin: 30px 0; border: 1px solid #e2e8f0;'>", unsafe_allow_html=True)
 
-                    mod1, mod2, mod3, mod4 = st.tabs(["✨ Auto-Clean", "📊 Visuals", "🧠 AI Insights", "💾 Download"])
+                mod1, mod2, mod3, mod4 = st.tabs(["✨ Auto-Clean", "📊 Visuals", "🧠 AI Insights", "💾 Download"])
 
-                    with mod1:
-                        st.markdown("<h3 style='font-size: 1.2rem; font-weight: 700; margin-bottom: 15px;'>Dataset Preview</h3>", unsafe_allow_html=True)
-                        st.dataframe(df.head(), use_container_width=True)
+                with mod1:
+                    st.markdown("<h3 style='font-size: 1.2rem; font-weight: 700; margin-bottom: 15px;'>Dataset Preview</h3>", unsafe_allow_html=True)
+                    st.dataframe(df.head(), use_container_width=True)
 
-                        if not st.session_state.cleaned:
-                            st.info("💡 Your data is raw and may contain missing values or invalid characters.")
-                            if st.button("✨ Execute Aggressive Auto-Clean", use_container_width=True):
-                                with st.spinner("Purging anomalies and imputing missing data..."):
-                                    cleaned_df, report = smart_clean(df)
-                                    st.session_state.df = cleaned_df
-                                    st.session_state.clean_report = report
-                                    st.session_state.cleaned = True
-                                    st.rerun()
+                    if not st.session_state.cleaned:
+                        st.info("💡 Your data is raw and may contain missing values or invalid characters.")
+                        if st.button("✨ Execute Aggressive Auto-Clean", use_container_width=True):
+                            with st.spinner("Purging anomalies and imputing missing data..."):
+                                cleaned_df, report = smart_clean(df)
+                                st.session_state.df = cleaned_df
+                                st.session_state.clean_report = report
+                                st.session_state.cleaned = True
+                                st.rerun()
+                    else:
+                        remaining = int(df.isnull().sum().sum())
+                        if remaining == 0:
+                            st.success("✅ Dataset has been cleaned. Zero missing values remain.")
                         else:
-                            remaining = int(df.isnull().sum().sum())
-                            if remaining == 0:
-                                st.success("✅ Dataset has been cleaned. Zero missing values remain.")
-                            else:
-                                st.warning(f"⚠️ Dataset cleaned, but {remaining} missing value(s) remain (see report below).")
-                            with st.expander("📋 What was cleaned", expanded=True):
-                                for line in st.session_state.clean_report:
-                                    st.markdown(f"- {line}")
+                            st.warning(f"⚠️ Dataset cleaned, but {remaining} missing value(s) remain (see report below).")
+                        with st.expander("📋 What was cleaned", expanded=True):
+                            for line in st.session_state.clean_report:
+                                st.markdown(f"- {line}")
 
-                    with mod2:
-                        st.markdown("<h3 style='font-size: 1.2rem; font-weight: 700; margin-bottom: 15px;'>Visual Analytics</h3>", unsafe_allow_html=True)
-                        numeric_cols_viz = df.select_dtypes(include=[np.number]).columns.tolist()
+                with mod2:
+                    st.markdown("<h3 style='font-size: 1.2rem; font-weight: 700; margin-bottom: 15px;'>Visual Analytics</h3>", unsafe_allow_html=True)
+                    numeric_cols_viz = df.select_dtypes(include=[np.number]).columns.tolist()
 
-                        if len(numeric_cols_viz) > 0:
-                            chart_type = st.radio("Select Analysis Type:", ["Correlation Matrix", "Feature Distribution", "Scatter Plot"], horizontal=True)
+                    if len(numeric_cols_viz) > 0:
+                        chart_type = st.radio("Select Analysis Type:", ["Correlation Matrix", "Feature Distribution", "Scatter Plot"], horizontal=True)
 
-                            if chart_type == "Correlation Matrix" and len(numeric_cols_viz) >= 2:
-                                fig = px.imshow(df[numeric_cols_viz].corr(), text_auto=".2f", color_continuous_scale=[[0.0, '#eff6ff'], [1.0, '#107c41']], aspect="auto")
-                                st.plotly_chart(fig, use_container_width=True)
-                            elif chart_type == "Feature Distribution" and numeric_cols_viz:
-                                fig = px.histogram(df, x=st.selectbox("Select Feature:", numeric_cols_viz), color_discrete_sequence=['#107c41'])
-                                st.plotly_chart(fig, use_container_width=True)
-                            elif chart_type == "Scatter Plot" and len(numeric_cols_viz) >= 2:
-                                fig = px.scatter(df, x=st.selectbox("X-Axis:", numeric_cols_viz, index=0), y=st.selectbox("Y-Axis:", numeric_cols_viz, index=1 if len(numeric_cols_viz) > 1 else 0), color_discrete_sequence=['#107c41'])
-                                st.plotly_chart(fig, use_container_width=True)
-                        else:
-                            st.info("No numerical columns available for visualizations.")
+                        if chart_type == "Correlation Matrix" and len(numeric_cols_viz) >= 2:
+                            fig = px.imshow(df[numeric_cols_viz].corr(), text_auto=".2f", color_continuous_scale=[[0.0, '#eff6ff'], [1.0, '#107c41']], aspect="auto")
+                            st.plotly_chart(fig, use_container_width=True)
+                        elif chart_type == "Feature Distribution" and numeric_cols_viz:
+                            fig = px.histogram(df, x=st.selectbox("Select Feature:", numeric_cols_viz), color_discrete_sequence=['#107c41'])
+                            st.plotly_chart(fig, use_container_width=True)
+                        elif chart_type == "Scatter Plot" and len(numeric_cols_viz) >= 2:
+                            fig = px.scatter(df, x=st.selectbox("X-Axis:", numeric_cols_viz, index=0), y=st.selectbox("Y-Axis:", numeric_cols_viz, index=1 if len(numeric_cols_viz) > 1 else 0), color_discrete_sequence=['#107c41'])
+                            st.plotly_chart(fig, use_container_width=True)
+                    else:
+                        st.info("No numerical columns available for visualizations.")
 
-                    with mod3:
-                        st.markdown("<h3 style='font-size: 1.2rem; font-weight: 700; margin-bottom: 5px;'>LLM Reasoning Layer</h3>", unsafe_allow_html=True)
-                        st.caption("Operating on pre-aggregated statistics to generate natural-language interpretations without exceeding context limits.")
+                with mod3:
+                    st.markdown("<h3 style='font-size: 1.2rem; font-weight: 700; margin-bottom: 5px;'>LLM Reasoning Layer</h3>", unsafe_allow_html=True)
+                    st.caption("Operating on pre-aggregated statistics to generate natural-language interpretations without exceeding context limits.")
 
-                        if st.button("Generate Analytical Report"):
-                            with st.spinner("Analyzing statistical aggregations..."):
-                                try:
-                                    # Fetch API key automatically in the background
-                                    api_key = st.secrets["GEMINI_API_KEY"]
-                                    genai.configure(api_key=api_key)
-                                    model = genai.GenerativeModel('gemini-3.8-flash')
+                    if st.button("Generate Analytical Report"):
+                        with st.spinner("Analyzing statistical aggregations..."):
+                            try:
+                                # Fetch API key automatically in the background
+                                api_key = st.secrets["GEMINI_API_KEY"]
+                                genai.configure(api_key=api_key)
+                                model = genai.GenerativeModel('gemini-3.8-flash')
 
-                                    stats_summary = df.describe().to_string()
-                                    corr_summary = df.select_dtypes(include=[np.number]).corr().to_string() if len(df.select_dtypes(include=[np.number]).columns) > 1 else "Not enough numeric columns for correlation."
+                                stats_summary = df.describe().to_string()
+                                corr_summary = df.select_dtypes(include=[np.number]).corr().to_string() if len(df.select_dtypes(include=[np.number]).columns) > 1 else "Not enough numeric columns for correlation."
 
-                                    prompt = f"""
-                                    You are an expert data analyst. Based on the following pre-aggregated statistics, draft a short, plain-language summary of what they imply. Highlight key distributions, extreme outliers, and any strong correlations.
+                                prompt = f"""
+                                You are an expert data analyst. Based on the following pre-aggregated statistics, draft a short, plain-language summary of what they imply. Highlight key distributions, extreme outliers, and any strong correlations.
 
-                                    Summary Statistics:
-                                    {stats_summary}
+                                Summary Statistics:
+                                {stats_summary}
 
-                                    Correlation Matrix:
-                                    {corr_summary}
-                                    """
+                                Correlation Matrix:
+                                {corr_summary}
+                                """
 
-                                    response = model.generate_content(prompt)
-                                    st.session_state.ai_report = response.text
-                                except KeyError:
-                                    st.error("🛑 Configuration Error: GEMINI_API_KEY not found in Streamlit secrets.")
-                                except Exception as e:
-                                    st.error(f"LLM API Error: {e}")
+                                response = model.generate_content(prompt)
+                                st.session_state.ai_report = response.text
+                            except KeyError:
+                                st.error("🛑 Configuration Error: GEMINI_API_KEY not found in Streamlit secrets.")
+                            except Exception as e:
+                                st.error(f"LLM API Error: {e}")
 
-                        if st.session_state.ai_report:
-                            st.markdown("<div style='background-color:#ffffff; padding:20px; border-radius:8px; border:1px solid #e2e8f0; margin-top:20px;'>", unsafe_allow_html=True)
-                            st.markdown(st.session_state.ai_report)
-                            st.markdown("</div>", unsafe_allow_html=True)
+                    if st.session_state.ai_report:
+                        st.markdown("<div style='background-color:#ffffff; padding:20px; border-radius:8px; border:1px solid #e2e8f0; margin-top:20px;'>", unsafe_allow_html=True)
+                        st.markdown(st.session_state.ai_report)
+                        st.markdown("</div>", unsafe_allow_html=True)
 
-                    with mod4:
-                        st.markdown("<h3 style='font-size: 1.2rem; font-weight: 700; margin-bottom: 15px;'>Export Cleaned Data</h3>", unsafe_allow_html=True)
-                        if not st.session_state.cleaned:
-                            st.error("🛑 The dataset still contains uncleaned data.")
-                            st.warning("👉 Go to the '✨ Auto-Clean' tab and clean the file first.")
-                        else:
-                            st.success("✅ Dataset is fully processed and ready for download.")
-                            st.download_button(label="📥 Download Cleaned CSV", data=df.to_csv(index=False).encode('utf-8'), file_name=f"Cleaned_{st.session_state.last_filename.split('.')[0]}.csv", mime="text/csv", use_container_width=True)
+                with mod4:
+                    st.markdown("<h3 style='font-size: 1.2rem; font-weight: 700; margin-bottom: 15px;'>Export Cleaned Data</h3>", unsafe_allow_html=True)
+                    if not st.session_state.cleaned:
+                        st.error("🛑 The dataset still contains uncleaned data.")
+                        st.warning("👉 Go to the '✨ Auto-Clean' tab and clean the file first.")
+                    else:
+                        st.success("✅ Dataset is fully processed and ready for download.")
+                        st.download_button(label="📥 Download Cleaned CSV", data=df.to_csv(index=False).encode('utf-8'), file_name=f"Cleaned_{st.session_state.last_filename.split('.')[0]}.csv", mime="text/csv", use_container_width=True)
 
-                except Exception as e:
-                    st.error(f"Data parse failure. Error: {e}")
+            except Exception as e:
+                st.error(f"Data parse failure. Error: {e}")
 
 # ==========================================
-# TAB 4: DOWNLOAD APP
+# TAB 3: DOWNLOAD APP
 # ==========================================
 with tab_download:
     st.markdown("<h2 style='color: #0f172a !important; font-weight: 800; text-align: center; margin-top: 40px; font-size: 2.5rem; letter-spacing: -0.02em;'>Get the Local Engine</h2>", unsafe_allow_html=True)
@@ -723,7 +509,7 @@ with tab_download:
             app_code = "# Error reading source file. Please ensure app.py exists locally."
 
         reqs = "streamlit\npandas\nplotly\nnumpy\ngoogle-generativeai"
-        bat_code = "@echo off\necho Starting EDA Engine Local Environment\nset DATASORT_LOCAL=1\npip install -r requirements.txt\nstreamlit run app.py\npause"
+        bat_code = "@echo off\necho Starting EDA Engine Local Environment\npip install -r requirements.txt\nstreamlit run app.py\npause"
 
         import io, zipfile
         zip_buffer = io.BytesIO()
@@ -735,7 +521,7 @@ with tab_download:
         st.download_button("📥 Download Local Engine (.zip)", data=zip_buffer.getvalue(), file_name="EDA_Engine_Offline.zip", mime="application/zip", use_container_width=True)
 
 # ==========================================
-# TAB 5: CHATBOT (restricted to the uploaded dataset)
+# TAB 4: CHATBOT (restricted to the uploaded dataset)
 # ==========================================
 OFF_TOPIC_TOKEN = "OFF_TOPIC"
 REFUSAL_MESSAGE = (
@@ -805,11 +591,9 @@ with tab_chat:
     st.markdown("<h2 style='font-weight: 800; text-align: center; margin-top: 20px; font-size: 2.2rem; letter-spacing: -0.02em;'>💬 DataSort Assistant</h2>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center; color: #64748b !important; margin-bottom: 20px;'>Ask questions about your uploaded dataset only.</p>", unsafe_allow_html=True)
 
-    data_ready = st.session_state.logged_in and st.session_state.df is not None
+    data_ready = st.session_state.df is not None
 
-    if not st.session_state.logged_in:
-        st.warning("🔐 Please log in (🔐 Login tab) and upload a dataset to use the assistant.")
-    elif st.session_state.df is None:
+    if not data_ready:
         st.warning("📂 Upload a dataset in the '⚡ Clean CSV' tab first. The assistant only answers questions about your uploaded file.")
     else:
         st.success(f"📊 Chatting about: **{st.session_state.last_filename}** "
