@@ -528,18 +528,44 @@ with tab_download:
                 app_code = f.read()
         except Exception:
             app_code = "# Error reading source file. Please ensure app.py exists locally."
+      
+        import io, os, zipfile
 
-        reqs = "streamlit\npandas\nplotly\nnumpy\ngoogle-generativeai"
-        bat_code = "@echo off\necho Starting EDA Engine Local Environment\npip install -r requirements.txt\nstreamlit run app.py\npause"
+        base_dir = os.path.dirname(os.path.abspath(__file__))
 
-        import io, zipfile
+        try:
+            with open(os.path.join(base_dir, "offline_app.py"), "r", encoding="utf-8") as f:
+                app_code = f.read()
+        except Exception:
+            app_code = "# Error: offline_app.py not found in the repository."
+
+        try:
+            with open(os.path.join(base_dir, "offline_requirements.txt"), "r", encoding="utf-8") as f:
+                reqs = f.read()
+        except Exception:
+            reqs = "streamlit\npandas\nnumpy\nplotly\nscikit-learn\npython-docx\nopenpyxl\npyarrow\ngoogle-generativeai\n"
+
+        bat_code = (
+            "@echo off\n"
+            "echo Starting DataSort Offline Engine...\n"
+            "python -m pip install -r requirements.txt\n"
+            "python -m streamlit run app.py --server.maxUploadSize 2048\n"
+            "pause\n"
+        )
+
         zip_buffer = io.BytesIO()
         with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
             zip_file.writestr("app.py", app_code)
             zip_file.writestr("requirements.txt", reqs)
             zip_file.writestr("Launch_Windows.bat", bat_code)
 
-        st.download_button("📥 Download Local Engine (.zip)", data=zip_buffer.getvalue(), file_name="EDA_Engine_Offline.zip", mime="application/zip", use_container_width=True)
+        st.download_button(
+            "📥 Download Local Engine (.zip)",
+            data=zip_buffer.getvalue(),
+            file_name="EDA_Engine_Offline.zip",
+            mime="application/zip",
+            use_container_width=True
+        )
 
 # ==========================================
 # TAB 4: CHATBOT (strictly limited to the uploaded dataset)
