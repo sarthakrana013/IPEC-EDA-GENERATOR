@@ -63,6 +63,27 @@ div[data-testid="stButton"] > button *, div[data-testid="stDownloadButton"] > bu
 [data-testid="stChatInput"] textarea,
 [data-testid="stChatInput"] textarea * { color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; caret-color: #ffffff !important; }
 [data-testid="stChatInput"] textarea::placeholder { color: #cbd5e1 !important; -webkit-text-fill-color: #cbd5e1 !important; opacity: 1 !important; }
+/* Code blocks in chatbot answers: light box, dark readable text */
+pre, [data-testid="stCode"], [data-testid="stCodeBlock"] {
+    background-color: #f1f5f9 !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 8px !important;
+}
+pre, pre *, pre code, pre code span,
+[data-testid="stCode"] *, [data-testid="stCodeBlock"] * {
+    color: #0f172a !important;
+    background-color: transparent !important;
+    -webkit-text-fill-color: #0f172a !important;
+    font-family: "Source Code Pro", Consolas, "Courier New", monospace !important;
+}
+/* Inline code like `.replace()` */
+:not(pre) > code {
+    background-color: #e2e8f0 !important;
+    color: #0f172a !important;
+    -webkit-text-fill-color: #0f172a !important;
+    border-radius: 4px !important;
+    padding: 0.1em 0.4em !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
